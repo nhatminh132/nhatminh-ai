@@ -291,6 +291,9 @@ export default function Chat({ user }) {
           console.error('❌ Failed to update title in DB:', error)
         } else {
           console.log('✅ Title updated in database')
+          // The realtime subscription in sidebar will automatically refresh
+          // But we can also trigger a manual refresh by updating currentChatId
+          // (This is a no-op since the ID is the same, but triggers the useEffect)
         }
       }
     } catch (error) {
