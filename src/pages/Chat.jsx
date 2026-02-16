@@ -58,9 +58,6 @@ export default function Chat({ user }) {
       }
     } else {
       loadProfile()
-      // Get user name and set random welcome message
-      const name = user.email?.split('@')[0] || 'there'
-      setUserName(name)
     }
     
     const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]
@@ -72,13 +69,17 @@ export default function Chat({ user }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('uploads_left, pro_max_uses_left, pro_max_last_reset, pro_lite_uses_left, pro_lite_last_reset')
+        .select('uploads_left, pro_max_uses_left, pro_max_last_reset, pro_lite_uses_left, pro_lite_last_reset, display_name')
         .eq('id', user.id)
         .single()
 
       if (error) throw error
       if (data) {
         setUploadsLeft(data.uploads_left)
+        
+        // Set user name from display_name or email
+        const name = data.display_name || user.email?.split('@')[0] || 'there'
+        setUserName(name)
         
         // Check if we need to reset Pro Max uses (new day)
         const lastReset = data.pro_max_last_reset ? new Date(data.pro_max_last_reset) : null
