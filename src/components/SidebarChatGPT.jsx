@@ -31,52 +31,63 @@ export default function SidebarChatGPT({
     return (
       <div className={`bg-[#171717] h-screen flex flex-col transition-all duration-300 ${isMinimized ? 'w-0' : 'w-64'} border-r border-[#3f3f3f]`}>
         {!isMinimized && (
-          <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-4">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">Welcome to Nhat Minh AI</h3>
-              <p className="text-sm text-gray-400">Sign in to unlock all features</p>
-            </div>
-
-            <button
-              onClick={handleLogin}
-              className="w-full px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-              </svg>
-              Sign In
-            </button>
-
-            <button
-              onClick={handleLogin}
-              className="w-full px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-gray-900 font-medium transition-colors"
-            >
-              Sign Up
-            </button>
-
-            <div className="mt-8 pt-8 border-t border-gray-700 w-full">
-              <div className="text-xs text-gray-500 space-y-2">
-                <p className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Unlimited AI access
-                </p>
-                <p className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Save chat history
-                </p>
-                <p className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  All AI models
-                </p>
+          <>
+            {/* Logo at top */}
+            <div className="p-4 border-b border-[#3f3f3f]">
+              <div className="flex items-center gap-3">
+                <img 
+                  src="https://i.ibb.co/zW49H0zK/nminh.png" 
+                  alt="Logo" 
+                  className="w-10 h-10 rounded-full"
+                />
+                <h2 className="text-xl font-bold text-white">Nhat Minh AI</h2>
               </div>
             </div>
-          </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-4">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">Welcome!</h3>
+                <p className="text-sm text-gray-400">Sign in to unlock all features</p>
+              </div>
+
+              <button
+                onClick={handleLogin}
+                className="w-full px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+              >
+                Sign In
+              </button>
+
+              <button
+                onClick={handleLogin}
+                className="w-full px-4 py-3 rounded-lg bg-white hover:bg-gray-100 text-gray-900 font-medium transition-colors"
+              >
+                Sign Up
+              </button>
+
+              <div className="mt-8 pt-8 border-t border-gray-700 w-full">
+                <div className="text-xs text-gray-500 space-y-2">
+                  <p className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Unlimited AI access
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Save chat history
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    All AI models
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     )
