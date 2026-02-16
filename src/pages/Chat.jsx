@@ -28,6 +28,7 @@ export default function Chat({ user }) {
   const [guestAirUsesLeft, setGuestAirUsesLeft] = useState(10)
   const [guestBaseUsesLeft, setGuestBaseUsesLeft] = useState(10)
   const [showAISafety, setShowAISafety] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
   const messagesEndRef = useRef(null)
   const isGuest = !user
 
