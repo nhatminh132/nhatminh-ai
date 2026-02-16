@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import AIFlashcardGenerator from './AIFlashcardGenerator'
 
 export default function NotesPanel({ userId, onClose }) {
   const [notes, setNotes] = useState([])
