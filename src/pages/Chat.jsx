@@ -202,6 +202,14 @@ export default function Chat({ user }) {
         // Generate better title using AI in background
         generateChatTitle(question, convData.id)
         
+        // Force sidebar refresh after 5 seconds to ensure title is updated
+        setTimeout(() => {
+          console.log('🔄 Forcing sidebar refresh for title update...')
+          setCurrentChatId(prev => prev) // Trigger re-render
+          // Dispatch custom event for sidebar to catch
+          window.dispatchEvent(new CustomEvent('refreshSidebar'))
+        }, 5000)
+        
         // Insert the first message
         const { error: msgError } = await supabase
           .from('messages')

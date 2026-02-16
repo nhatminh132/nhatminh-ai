@@ -145,6 +145,16 @@ export default function SidebarChatGPT({
     }
   }, [refreshTrigger])
 
+  // Listen for custom refresh events (for title updates)
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('🔄 Custom refresh event received, updating sidebar...')
+      fetchChats()
+    }
+    window.addEventListener('refreshSidebar', handleRefresh)
+    return () => window.removeEventListener('refreshSidebar', handleRefresh)
+  }, [])
+
   const loadProfile = async () => {
     try {
       const { data, error } = await supabase
