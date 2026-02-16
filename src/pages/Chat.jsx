@@ -176,7 +176,42 @@ export default function Chat({ user }) {
     }
   }
 
-Tool call argument 'replace' pruned from message history.
+  const saveChatHistory = async (question, answer, modelUsed) => {
+    try {
+      // If no current chat, create a new conversation with AI-generated title
+      if (!currentChatId) {
+        // Use first message as temporary title, will be updated with AI summary
+        const tempTitle = question.length > 60 ? question.substring(0, 57) + '...' : question
+        
+        const { data: convData, error: convError } = await supabase
+          .from('conversations')
+          .insert({
+            user_id: user.id,
+            title: tempTitle,
+          })
+          .select()
+          .single()
+
+        if (convError) throw convError
+        
+        // Set the current chat ID immediately so it shows in sidebar
+        setCurrentChatId(convData.id)
+        
+        // Generate better title using AI in background
+        generateChatTitle(question, convData.id)
+        
+        // Insert the first message
+        const { error: msgError } = await supabase
+          .from('messages')
+          .insert({
+            conversation_id: convData.id,
+            question,
+            answer,
+            model_used: modelUsed,
+          })
+
+        if (msgError) throw msgError
+      } else {
         // Add message to existing conversation
         const { error } = await supabase
           .from('messages')
@@ -191,6 +226,43 @@ Tool call argument 'replace' pruned from message history.
       }
     } catch (error) {
       console.error('Error saving chat history:', error)
+    }
+  }
+
+  const generateChatTitle = async (firstMessage, conversationId) => {
+    try {
+      // Use llama model to generate concise title
+      const response = await fetch('/api/groq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Generate a very short title (max 5 words) for this conversation: "${firstMessage}"`,
+          model: 'meta-llama/llama-prompt-guard-2-22m',
+          systemPrompt: 'You are a title generator. Respond with ONLY the title, nothing else. Keep it under 5 words.'
+        })
+      })
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let title = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        title += decoder.decode(value)
+      }
+
+      // Clean up title and update conversation
+      title = title.trim().replace(/^["']|["']$/g, '') // Remove quotes
+      if (title && title.length > 0) {
+        await supabase
+          .from('conversations')
+          .update({ title: title.substring(0, 60) })
+          .eq('id', conversationId)
+      }
+    } catch (error) {
+      console.error('Error generating title:', error)
+      // Title generation failed, but that's okay - temp title will remain
     }
   }
 
