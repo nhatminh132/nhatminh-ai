@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import HelpModal from './HelpModal'
 import SettingsModal from './SettingsModal'
 import BookmarksPanel from './BookmarksPanel'
+import NotesPanel from './NotesPanel'
 
 export default function SidebarChatGPT({ 
   userId, 
@@ -108,6 +109,7 @@ export default function SidebarChatGPT({
   const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showBookmarks, setShowBookmarks] = useState(false)
+  const [showNotes, setShowNotes] = useState(false)
 
   useEffect(() => {
     fetchChats()
@@ -262,6 +264,9 @@ export default function SidebarChatGPT({
 
   return (
     <>
+      {/* Notes Panel */}
+      {showNotes && <NotesPanel userId={userId} onClose={() => setShowNotes(false)} />}
+
       {/* Bookmarks Panel */}
       {showBookmarks && <BookmarksPanel userId={userId} onClose={() => setShowBookmarks(false)} />}
 

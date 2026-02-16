@@ -1,0 +1,426 @@
+import React, { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabaseClient'
+
+export default function NotesPanel({ userId, onClose }) {
+  const [notes, setNotes] = useState([])
+  const [folders, setFolders] = useState([])
+  const [selectedFolder, setSelectedFolder] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showNewNote, setShowNewNote] = useState(false)
+  const [showNewFolder, setShowNewFolder] = useState(false)
+  const [editingNote, setEditingNote] = useState(null)
+
+  useEffect(() => {
+    if (userId) {
+      loadFolders()
+      loadNotes()
+    }
+  }, [userId])
+
+  const loadFolders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('topics')
+        .select('*')
+        .eq('user_id', userId)
+        .order('name')
+
+      if (error) throw error
+      setFolders(data || [])
+    } catch (error) {
+      console.error('Error loading folders:', error)
+    }
+  }
+
+  const loadNotes = async () => {
+    try {
+      setLoading(true)
+      let query = supabase
+        .from('notes')
+        .select('*, topics(name, color)')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+
+      if (selectedFolder) {
+        query = query.eq('topic_id', selectedFolder)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      setNotes(data || [])
+    } catch (error) {
+      console.error('Error loading notes:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (userId) loadNotes()
+  }, [selectedFolder])
+
+  const handleCreateNote = async (noteData) => {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .insert([{
+          user_id: userId,
+          title: noteData.title,
+          content: noteData.content,
+          topic_id: noteData.topicId || null,
+          tags: noteData.tags || []
+        }])
+        .select()
+
+      if (error) throw error
+      setNotes([data[0], ...notes])
+      setShowNewNote(false)
+    } catch (error) {
+      console.error('Error creating note:', error)
+      alert('Failed to create note')
+    }
+  }
+
+  const handleUpdateNote = async (noteId, updates) => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', noteId)
+
+      if (error) throw error
+      loadNotes()
+      setEditingNote(null)
+    } catch (error) {
+      console.error('Error updating note:', error)
+      alert('Failed to update note')
+    }
+  }
+
+  const handleDeleteNote = async (noteId) => {
+    if (!confirm('Delete this note?')) return
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteId)
+
+      if (error) throw error
+      setNotes(notes.filter(n => n.id !== noteId))
+    } catch (error) {
+      console.error('Error deleting note:', error)
+      alert('Failed to delete note')
+    }
+  }
+
+  const handleCreateFolder = async (name, color) => {
+    try {
+      const { data, error } = await supabase
+        .from('topics')
+        .insert([{ user_id: userId, name, color }])
+        .select()
+
+      if (error) throw error
+      setFolders([...folders, data[0]])
+      setShowNewFolder(false)
+    } catch (error) {
+      console.error('Error creating folder:', error)
+      alert('Failed to create folder')
+    }
+  }
+
+  const filteredNotes = notes.filter(note =>
+    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
+  )
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#2f2f2f] rounded-xl max-w-6xl w-full max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-[#4a4a4a]">
+          <div className="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="text-blue-400" viewBox="0 0 16 16">
+              <path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1zm0 3a.5.5 0 0 1 0-1h6a.5.5 0 0 1 0 1zm0 3a.5.5 0 0 1 0-1h6a.5.5 0 0 1 0 1zm0 3a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1zM14.5 3.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 0 1z"/>
+            </svg>
+            <h2 className="text-2xl font-bold text-white">Study Notes</h2>
+            <span className="text-gray-400 text-sm">({filteredNotes.length})</span>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar - Folders */}
+          <div className="w-64 border-r border-[#4a4a4a] p-4 overflow-y-auto">
+            <button
+              onClick={() => setShowNewFolder(true)}
+              className="w-full mb-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm"
+            >
+              + New Folder
+            </button>
+
+            <button
+              onClick={() => setSelectedFolder(null)}
+              className={`w-full text-left px-3 py-2 rounded-lg transition mb-2 ${!selectedFolder ? 'bg-[#4a4a4a] text-white' : 'text-gray-400 hover:bg-[#3f3f3f]'}`}
+            >
+              📁 All Notes
+            </button>
+
+            {folders.map(folder => (
+              <button
+                key={folder.id}
+                onClick={() => setSelectedFolder(folder.id)}
+                className={`w-full text-left px-3 py-2 rounded-lg transition mb-2 flex items-center gap-2 ${selectedFolder === folder.id ? 'bg-[#4a4a4a] text-white' : 'text-gray-400 hover:bg-[#3f3f3f]'}`}
+              >
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: folder.color }}></span>
+                {folder.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col">
+            {/* Toolbar */}
+            <div className="p-4 border-b border-[#4a4a4a] flex gap-4">
+              <input
+                type="text"
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-4 py-2 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+              <button
+                onClick={() => setShowNewNote(true)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition whitespace-nowrap"
+              >
+                + New Note
+              </button>
+            </div>
+
+            {/* Notes Grid */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {loading ? (
+                <div className="text-center text-gray-400 py-8">Loading notes...</div>
+              ) : filteredNotes.length === 0 ? (
+                <div className="text-center text-gray-400 py-8">
+                  {searchQuery ? 'No notes found' : 'No notes yet. Create your first study note!'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredNotes.map(note => (
+                    <div key={note.id} className="bg-[#212121] rounded-lg p-4 border border-[#4a4a4a] hover:border-blue-500 transition cursor-pointer"
+                      onClick={() => setEditingNote(note)}>
+                      <h3 className="text-white font-semibold mb-2 truncate">{note.title}</h3>
+                      <p className="text-gray-400 text-sm line-clamp-3 mb-3">{note.content}</p>
+                      
+                      {note.tags && note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {note.tags.slice(0, 3).map((tag, i) => (
+                            <span key={i} className="px-2 py-1 bg-[#3f3f3f] text-gray-300 text-xs rounded">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{new Date(note.updated_at).toLocaleDateString()}</span>
+                        {note.topics && (
+                          <span className="px-2 py-1 rounded" style={{ backgroundColor: note.topics.color + '40', color: note.topics.color }}>
+                            {note.topics.name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* New Note Modal */}
+        {showNewNote && (
+          <NoteEditor
+            folders={folders}
+            onSave={handleCreateNote}
+            onClose={() => setShowNewNote(false)}
+          />
+        )}
+
+        {/* Edit Note Modal */}
+        {editingNote && (
+          <NoteEditor
+            note={editingNote}
+            folders={folders}
+            onSave={(data) => handleUpdateNote(editingNote.id, data)}
+            onDelete={() => handleDeleteNote(editingNote.id)}
+            onClose={() => setEditingNote(null)}
+          />
+        )}
+
+        {/* New Folder Modal */}
+        {showNewFolder && (
+          <FolderEditor
+            onSave={handleCreateFolder}
+            onClose={() => setShowNewFolder(false)}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function NoteEditor({ note, folders, onSave, onDelete, onClose }) {
+  const [title, setTitle] = useState(note?.title || '')
+  const [content, setContent] = useState(note?.content || '')
+  const [topicId, setTopicId] = useState(note?.topic_id || '')
+  const [tags, setTags] = useState(note?.tags?.join(', ') || '')
+
+  const handleSave = () => {
+    if (!title.trim()) {
+      alert('Please enter a title')
+      return
+    }
+    onSave({
+      title: title.trim(),
+      content: content.trim(),
+      topicId: topicId || null,
+      tags: tags.split(',').map(t => t.trim()).filter(Boolean)
+    })
+  }
+
+  return (
+    <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-10">
+      <div className="bg-[#2f2f2f] rounded-xl max-w-2xl w-full p-6">
+        <h3 className="text-xl font-bold text-white mb-4">{note ? 'Edit Note' : 'New Note'}</h3>
+        
+        <input
+          type="text"
+          placeholder="Note title..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full px-4 py-2 mb-4 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+
+        <textarea
+          placeholder="Start typing your notes..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows="10"
+          className="w-full px-4 py-2 mb-4 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+        />
+
+        <select
+          value={topicId}
+          onChange={(e) => setTopicId(e.target.value)}
+          className="w-full px-4 py-2 mb-4 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="">No folder</option>
+          {folders.map(folder => (
+            <option key={folder.id} value={folder.id}>{folder.name}</option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          placeholder="Tags (comma separated)"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          className="w-full px-4 py-2 mb-4 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+
+        <div className="flex gap-3">
+          {note && (
+            <button
+              onClick={onDelete}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+            >
+              Delete
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-[#4a4a4a] hover:bg-[#5a5a5a] text-white rounded-lg transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FolderEditor({ onSave, onClose }) {
+  const [name, setName] = useState('')
+  const [color, setColor] = useState('#3b82f6')
+
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      alert('Please enter a folder name')
+      return
+    }
+    onSave(name.trim(), color)
+  }
+
+  return (
+    <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-10">
+      <div className="bg-[#2f2f2f] rounded-xl max-w-md w-full p-6">
+        <h3 className="text-xl font-bold text-white mb-4">New Folder</h3>
+        
+        <input
+          type="text"
+          placeholder="Folder name (e.g., Math, Science)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full px-4 py-2 mb-4 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+
+        <div className="mb-4">
+          <label className="text-sm text-gray-400 block mb-2">Color</label>
+          <div className="flex gap-2">
+            {colors.map(c => (
+              <button
+                key={c}
+                onClick={() => setColor(c)}
+                className={`w-10 h-10 rounded-full ${color === c ? 'ring-2 ring-white ring-offset-2 ring-offset-[#2f2f2f]' : ''}`}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-[#4a4a4a] hover:bg-[#5a5a5a] text-white rounded-lg transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+          >
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
