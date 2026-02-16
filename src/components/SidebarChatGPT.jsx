@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import HelpModal from './HelpModal'
 import SettingsModal from './SettingsModal'
+import BookmarksPanel from './BookmarksPanel'
 
 export default function SidebarChatGPT({ 
   userId, 
@@ -106,6 +107,7 @@ export default function SidebarChatGPT({
   const [showPersonalize, setShowPersonalize] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showBookmarks, setShowBookmarks] = useState(false)
 
   useEffect(() => {
     fetchChats()
@@ -260,6 +262,9 @@ export default function SidebarChatGPT({
 
   return (
     <>
+      {/* Bookmarks Panel */}
+      {showBookmarks && <BookmarksPanel userId={userId} onClose={() => setShowBookmarks(false)} />}
+
       {/* Help Modal */}
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
@@ -539,6 +544,12 @@ export default function SidebarChatGPT({
                 <path d="M14.002 13a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V5A2 2 0 0 1 2 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-1.998 2M14 2H4a1 1 0 0 0-1 1h9.002a2 2 0 0 1 2 2v7A1 1 0 0 0 15 11V3a1 1 0 0 0-1-1M2.002 4a1 1 0 0 0-1 1v8l2.646-2.354a.5.5 0 0 1 .63-.062l2.66 1.773 3.71-3.71a.5.5 0 0 1 .577-.094l1.777 1.947V5a1 1 0 0 0-1-1z"/>
               </svg>
               {!isMinimized && <span>Gallery</span>}
+            </button>
+            <button onClick={() => setShowBookmarks(true)} className={`w-full hover:bg-[#2f2f2f] text-white px-3 py-2.5 rounded-lg transition flex items-center ${isMinimized ? 'justify-center' : 'gap-3'}`} title="Bookmarks">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`${isMinimized ? 'w-6 h-6' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 16 16">
+                <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5z"/>
+              </svg>
+              {!isMinimized && <span>Bookmarks</span>}
             </button>
           </div>
         </div>
