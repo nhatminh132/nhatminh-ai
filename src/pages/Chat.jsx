@@ -233,6 +233,8 @@ export default function Chat({ user }) {
 
   const generateChatTitle = async (firstMessage, conversationId) => {
     try {
+      console.log('🎯 Generating title for:', firstMessage.substring(0, 50))
+      
       // Use llama model to generate concise title
       const response = await fetch('/api/groq', {
         method: 'POST',
@@ -244,6 +246,10 @@ export default function Chat({ user }) {
           conversationHistory: []
         })
       })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
@@ -257,14 +263,22 @@ export default function Chat({ user }) {
 
       // Clean up title and update conversation
       title = title.trim().replace(/^["']|["']$/g, '') // Remove quotes
+      console.log('✅ Generated title:', title)
+      
       if (title && title.length > 0) {
-        await supabase
+        const { error } = await supabase
           .from('conversations')
           .update({ title: title.substring(0, 60) })
           .eq('id', conversationId)
+        
+        if (error) {
+          console.error('❌ Failed to update title in DB:', error)
+        } else {
+          console.log('✅ Title updated in database')
+        }
       }
     } catch (error) {
-      console.error('Error generating title:', error)
+      console.error('❌ Error generating title:', error)
       // Title generation failed, but that's okay - temp title will remain
     }
   }
