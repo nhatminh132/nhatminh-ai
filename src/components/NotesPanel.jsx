@@ -37,7 +37,7 @@ export default function NotesPanel({ userId, onClose }) {
     try {
       setLoading(true)
       let query = supabase
-        .from('notes')
+        .from('study_notes')
         .select('*, topics(name, color)')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
@@ -64,7 +64,7 @@ export default function NotesPanel({ userId, onClose }) {
   const handleCreateNote = async (noteData) => {
     try {
       const { data, error } = await supabase
-        .from('notes')
+        .from('study_notes')
         .insert([{
           user_id: userId,
           title: noteData.title,
@@ -86,7 +86,7 @@ export default function NotesPanel({ userId, onClose }) {
   const handleUpdateNote = async (noteId, updates) => {
     try {
       const { error } = await supabase
-        .from('notes')
+        .from('study_notes')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', noteId)
 
@@ -104,7 +104,7 @@ export default function NotesPanel({ userId, onClose }) {
 
     try {
       const { error } = await supabase
-        .from('notes')
+        .from('study_notes')
         .delete()
         .eq('id', noteId)
 
