@@ -52,36 +52,60 @@ export default function FlashcardsPanel({ userId, onClose }) {
   }
 
   const handleCreateDeck = async (name, topicId) => {
-    // Just add deck to local state - cards will be created later
-    setDecks([...decks, { id: decks.length, name }])
-    setShowNewDeck(false)
+    try {
+      // Create a placeholder card for this deck
+      const { error } = await supabase
+        .from('flashcards')
+        .insert({ 
+          user_id: userId,
+          deck_name: name,
+          question: 'Sample Question',
+          answer: 'Sample Answer'
+        })
+
+      if (error) throw error
+      
+      // Reload decks to include the new one
+      loadDecks()
+      setShowNewDeck(false)
+    } catch (error) {
+      console.error('Error creating deck:', error)
+      alert('Failed to create deck: ' + error.message)
+    }
   }
 
   const handleCreateCard = async (front, back) => {
     try {
       const { error } = await supabase
         .from('flashcards')
-        .insert({ deck_id: selectedDeck.id, front, back })
+        .insert({ 
+          user_id: userId,
+          deck_name: selectedDeck.name, 
+          question: front, 
+          answer: back 
+        })
 
       if (error) throw error
-      loadFlashcards(selectedDeck.id)
+      loadFlashcards(selectedDeck.name)
       setShowNewCard(false)
     } catch (error) {
       console.error('Error creating card:', error)
     }
   }
 
-  const handleDeleteDeck = async (deckId) => {
+  const handleDeleteDeck = async (deckName) => {
     if (!confirm('Delete this deck and all its cards?')) return
     try {
+      // Delete all flashcards in this deck
       const { error } = await supabase
-        .from('flashcard_decks')
+        .from('flashcards')
         .delete()
-        .eq('id', deckId)
+        .eq('user_id', userId)
+        .eq('deck_name', deckName)
 
       if (error) throw error
-      setDecks(decks.filter(d => d.id !== deckId))
-      if (selectedDeck?.id === deckId) {
+      loadDecks()
+      if (selectedDeck?.name === deckName) {
         setSelectedDeck(null)
         setShowStudyMode(false)
       }
@@ -145,13 +169,13 @@ export default function FlashcardsPanel({ userId, onClose }) {
                       <p className="text-sm text-gray-400 mb-4">0 cards</p>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => { setSelectedDeck(deck); loadFlashcards(deck.id); }}
+                          onClick={() => { setSelectedDeck(deck); loadFlashcards(deck.name); }}
                           className="flex-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded transition"
                         >
                           View Cards
                         </button>
                         <button
-                          onClick={() => handleDeleteDeck(deck.id)}
+                          onClick={() => handleDeleteDeck(deck.name)}
                           className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition"
                         >
                           Delete
@@ -200,8 +224,8 @@ export default function FlashcardsPanel({ userId, onClose }) {
                     <div key={card.id} className="bg-[#212121] p-4 rounded-lg border border-[#4a4a4a]">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <div className="text-white font-medium mb-2">{card.front}</div>
-                          <div className="text-gray-400 text-sm">{card.back}</div>
+                          <div className="text-white font-medium mb-2">{card.question}</div>
+                          <div className="text-gray-400 text-sm">{card.answer}</div>
                         </div>
                         <button
                           onClick={() => handleDeleteCard(card.id)}
@@ -228,10 +252,10 @@ export default function FlashcardsPanel({ userId, onClose }) {
               >
                 <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                   <div className="absolute w-full h-full backface-hidden bg-blue-600 rounded-lg p-8 flex items-center justify-center text-white text-2xl text-center">
-                    {flashcards[currentCardIndex]?.front}
+                    {flashcards[currentCardIndex]?.question}
                   </div>
                   <div className="absolute w-full h-full backface-hidden bg-green-600 rounded-lg p-8 flex items-center justify-center text-white text-xl text-center rotate-y-180">
-                    {flashcards[currentCardIndex]?.back}
+                    {flashcards[currentCardIndex]?.answer}
                   </div>
                 </div>
               </div>
