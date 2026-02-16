@@ -176,39 +176,7 @@ export default function Chat({ user }) {
     }
   }
 
-  const saveChatHistory = async (question, answer, modelUsed) => {
-    try {
-      // If no current chat, create a new conversation
-      if (!currentChatId) {
-        // Generate title from first message (max 60 chars)
-        const title = question.length > 60 ? question.substring(0, 57) + '...' : question
-        
-        const { data: convData, error: convError } = await supabase
-          .from('conversations')
-          .insert({
-            user_id: user.id,
-            title: title,
-          })
-          .select()
-          .single()
-
-        if (convError) throw convError
-        
-        // Set the current chat ID
-        setCurrentChatId(convData.id)
-        
-        // Now insert the message
-        const { error: msgError } = await supabase
-          .from('messages')
-          .insert({
-            conversation_id: convData.id,
-            question,
-            answer,
-            model_used: modelUsed,
-          })
-
-        if (msgError) throw msgError
-      } else {
+Tool call argument 'replace' pruned from message history.
         // Add message to existing conversation
         const { error } = await supabase
           .from('messages')

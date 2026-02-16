@@ -110,6 +110,12 @@ export default function NotesPanel({ userId, onClose }) {
 
       if (error) throw error
       setNotes(notes.filter(n => n.id !== noteId))
+      
+      // Hide the editor if deleting the currently editing note
+      if (editingNote?.id === noteId) {
+        setEditingNote(null)
+        setShowNewNote(false)
+      }
     } catch (error) {
       console.error('Error deleting note:', error)
       alert('Failed to delete note')
