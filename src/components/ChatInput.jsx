@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
-export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, disabled, mode, onModeChange, proMaxUsesLeft, proLiteUsesLeft }) {
+export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, disabled, mode, onModeChange, proMaxUsesLeft, proLiteUsesLeft, isGuest = false, guestAirUsesLeft = 10, guestBaseUsesLeft = 10 }) {
   const [message, setMessage] = useState('')
   const [rows, setRows] = useState(1)
   const [showModeMenu, setShowModeMenu] = useState(false)
@@ -47,7 +47,10 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState(null)
 
-  const modeConfig = {
+  const modeConfig = isGuest ? {
+    air: { label: 'Air', description: `Quick responses (${guestAirUsesLeft}/10 uses left)`, disabled: guestAirUsesLeft <= 0 },
+    base: { label: 'Base', description: `Standard model (${guestBaseUsesLeft}/10 uses left)`, disabled: guestBaseUsesLeft <= 0 }
+  } : {
     air: { label: 'Air', description: 'Quick responses (No limit)' },
     base: { label: 'Base', description: 'Standard model (No limit)' },
     pro: { label: 'Pro', description: 'Advanced model (No limit)' },
@@ -190,11 +193,15 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
                       key={key}
                       type="button"
                       onClick={() => {
-                        onModeChange(key)
-                        setShowModeMenu(false)
+                        if (!config.disabled) {
+                          onModeChange(key)
+                          setShowModeMenu(false)
+                        }
                       }}
-                      className={'w-full px-4 py-3 text-left hover:bg-[#3f3f3f] transition-colors flex items-start gap-3 ' + (mode === key ? 'bg-[#3f3f3f]' : '')}
-                      disabled={disabled}
+                      className={'w-full px-4 py-3 text-left transition-colors flex items-start gap-3 ' + 
+                        (config.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#3f3f3f]') + ' ' +
+                        (mode === key ? 'bg-[#3f3f3f]' : '')}
+                      disabled={disabled || config.disabled}
                     >
                       <div className="flex-1">
                         <div className="font-medium text-white">{config.label}</div>

@@ -6,6 +6,7 @@ import ChatMessage from '../components/ChatMessage'
 import ChatInput from '../components/ChatInput'
 import SidebarChatGPT from '../components/SidebarChatGPT'
 import Gallery from '../components/Gallery'
+import LoginPopup from '../components/LoginPopup'
 
 export default function Chat({ user }) {
   const [messages, setMessages] = useState([])
@@ -21,7 +22,11 @@ export default function Chat({ user }) {
   const [isTemporaryChat, setIsTemporaryChat] = useState(false)
   const [userName, setUserName] = useState('')
   const [welcomeMessage, setWelcomeMessage] = useState('')
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
+  const [guestAirUsesLeft, setGuestAirUsesLeft] = useState(10)
+  const [guestBaseUsesLeft, setGuestBaseUsesLeft] = useState(10)
   const messagesEndRef = useRef(null)
+  const isGuest = !user
 
   // Welcome messages pool
   const welcomeMessages = [
@@ -37,13 +42,26 @@ export default function Chat({ user }) {
 
   // Fetch profile and chat history on mount
   useEffect(() => {
-    loadProfile()
-    // Don't auto-load chat history - start with fresh page like ChatGPT
-    // loadChatHistory()
-    
-    // Get user name and set random welcome message
-    const name = user.email?.split('@')[0] || 'there'
-    setUserName(name)
+    if (isGuest) {
+      // Load guest usage from localStorage
+      const airUses = parseInt(localStorage.getItem('guestAirUsesLeft') || '10')
+      const baseUses = parseInt(localStorage.getItem('guestBaseUsesLeft') || '10')
+      setGuestAirUsesLeft(airUses)
+      setGuestBaseUsesLeft(baseUses)
+      
+      // Set guest name
+      setUserName('Guest')
+      
+      // Force guest to use only Air or Base mode
+      if (mode !== 'air' && mode !== 'base') {
+        setMode('base')
+      }
+    } else {
+      loadProfile()
+      // Get user name and set random welcome message
+      const name = user.email?.split('@')[0] || 'there'
+      setUserName(name)
+    }
     
     const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]
     setWelcomeMessage(randomMessage)
@@ -239,6 +257,18 @@ export default function Chat({ user }) {
   const handleSendMessage = async (message) => {
     if (loading) return
 
+    // Show login popup for guest users
+    if (isGuest) {
+      setShowLoginPopup(true)
+      
+      // Check if guest has uses left
+      const currentUses = mode === 'air' ? guestAirUsesLeft : guestBaseUsesLeft
+      if (currentUses <= 0) {
+        alert(`You've used all ${mode === 'air' ? 'Air' : 'Base'} mode requests. Please sign in to continue.`)
+        return
+      }
+    }
+
     // Add user message
     setMessages(prev => [...prev, { text: message, isUser: true, model: null }])
     setLoading(true)
@@ -278,9 +308,22 @@ export default function Chat({ user }) {
         return newMessages
       })
 
-      // Save to database (skip if temporary chat)
-      if (!isTemporaryChat) {
-        await saveChatHistory(message, text, model)
+      // Decrement guest usage if guest
+      if (isGuest) {
+        if (mode === 'air') {
+          const newUses = guestAirUsesLeft - 1
+          setGuestAirUsesLeft(newUses)
+          localStorage.setItem('guestAirUsesLeft', newUses.toString())
+        } else if (mode === 'base') {
+          const newUses = guestBaseUsesLeft - 1
+          setGuestBaseUsesLeft(newUses)
+          localStorage.setItem('guestBaseUsesLeft', newUses.toString())
+        }
+      } else {
+        // Save to database (skip if temporary chat)
+        if (!isTemporaryChat) {
+          await saveChatHistory(message, text, model)
+        }
       }
     } catch (error) {
       console.error('❌ Error getting AI response:', error)
@@ -364,8 +407,13 @@ export default function Chat({ user }) {
 
   return (
     <div className="flex h-screen bg-[#212121]">
+      {/* Login Popup for Guests */}
+      {showLoginPopup && (
+        <LoginPopup onClose={() => setShowLoginPopup(false)} />
+      )}
+
       {/* Sidebar - always visible, toggles between minimized and expanded */}
-      <SidebarChatGPT
+      {!isGuest && <SidebarChatGPT
         userId={user.id}
         currentChatId={currentChatId}
         onNewChat={handleNewChat}
@@ -375,7 +423,7 @@ export default function Chat({ user }) {
         userEmail={user.email}
         uploadsLeft={uploadsLeft}
         onToggleGallery={() => setShowGallery(!showGallery)}
-      />
+      />}
 
       {/* Gallery Modal */}
       {showGallery && (
@@ -391,7 +439,7 @@ export default function Chat({ user }) {
           onToggleSidebar={() => setSidebarMinimized(!sidebarMinimized)}
           sidebarMinimized={sidebarMinimized}
           isTemporaryChat={isTemporaryChat}
-          onToggleTemporaryChat={handleToggleTemporaryChat}
+          onToggleTemporaryChat={isGuest ? null : handleToggleTemporaryChat}
         />
         
         {messages.length === 0 ? (
@@ -421,6 +469,9 @@ export default function Chat({ user }) {
                 onModeChange={setMode}
                 proMaxUsesLeft={proMaxUsesLeft}
                 proLiteUsesLeft={proLiteUsesLeft}
+                isGuest={isGuest}
+                guestAirUsesLeft={guestAirUsesLeft}
+                guestBaseUsesLeft={guestBaseUsesLeft}
               />
             </div>
           </div>
@@ -451,6 +502,9 @@ export default function Chat({ user }) {
               onModeChange={setMode}
               proMaxUsesLeft={proMaxUsesLeft}
               proLiteUsesLeft={proLiteUsesLeft}
+              isGuest={isGuest}
+              guestAirUsesLeft={guestAirUsesLeft}
+              guestBaseUsesLeft={guestBaseUsesLeft}
             />
           </>
         )}

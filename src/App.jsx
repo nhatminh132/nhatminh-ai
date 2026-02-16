@@ -43,7 +43,7 @@ export default function App() {
         <Route path="/pornhub-troll" element={<PornhubTroll />} />
         <Route
           path="/"
-          element={session ? <Chat user={session.user} /> : <Login />}
+          element={<Chat user={session?.user || null} />}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
