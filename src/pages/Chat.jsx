@@ -239,8 +239,9 @@ export default function Chat({ user }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: `Generate a very short title (max 5 words) for this conversation: "${firstMessage}"`,
-          model: 'meta-llama/llama-prompt-guard-2-22m',
-          systemPrompt: 'You are a title generator. Respond with ONLY the title, nothing else. Keep it under 5 words.'
+          model: 'llama-3.1-8b-instant',
+          systemPrompt: 'You are a title generator. Respond with ONLY the title, nothing else. Keep it under 5 words.',
+          conversationHistory: []
         })
       })
 
