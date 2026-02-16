@@ -8,6 +8,7 @@ import SidebarChatGPT from '../components/SidebarChatGPT'
 import Gallery from '../components/Gallery'
 import LoginPopup from '../components/LoginPopup'
 import AISafetyModal from '../components/AISafetyModal'
+import KeyboardShortcutsHelp from '../components/KeyboardShortcutsHelp'
 
 export default function Chat({ user }) {
   const [messages, setMessages] = useState([])
@@ -486,6 +487,9 @@ export default function Chat({ user }) {
 
   return (
     <div className="flex h-screen bg-[#212121]">
+      {/* Keyboard Shortcuts Help */}
+      {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}
+
       {/* AI Safety Modal */}
       {showAISafety && (
         <AISafetyModal 
