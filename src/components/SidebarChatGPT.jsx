@@ -4,6 +4,7 @@ import HelpModal from './HelpModal'
 import SettingsModal from './SettingsModal'
 import BookmarksPanel from './BookmarksPanel'
 import NotesPanel from './NotesPanel'
+import FlashcardsPanel from './FlashcardsPanel'
 
 export default function SidebarChatGPT({ 
   userId, 
@@ -110,6 +111,7 @@ export default function SidebarChatGPT({
   const [showHelp, setShowHelp] = useState(false)
   const [showBookmarks, setShowBookmarks] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
+  const [showFlashcards, setShowFlashcards] = useState(false)
 
   useEffect(() => {
     fetchChats()
