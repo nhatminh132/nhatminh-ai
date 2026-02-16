@@ -269,7 +269,14 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
 
           {/* AI Warning Text */}
           <div className="mt-2 text-xs text-gray-500 text-center">
-            AI can make mistakes. Check important info.
+            AI can make mistakes. Check important info. Please read{' '}
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('openAISafety'))}
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              AI Safety guidelines
+            </button>
+            {' '}before use.
           </div>
         </div>
       </form>

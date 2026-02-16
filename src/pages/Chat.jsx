@@ -7,6 +7,7 @@ import ChatInput from '../components/ChatInput'
 import SidebarChatGPT from '../components/SidebarChatGPT'
 import Gallery from '../components/Gallery'
 import LoginPopup from '../components/LoginPopup'
+import AISafetyModal from '../components/AISafetyModal'
 
 export default function Chat({ user }) {
   const [messages, setMessages] = useState([])
@@ -25,6 +26,7 @@ export default function Chat({ user }) {
   const [showLoginPopup, setShowLoginPopup] = useState(false)
   const [guestAirUsesLeft, setGuestAirUsesLeft] = useState(10)
   const [guestBaseUsesLeft, setGuestBaseUsesLeft] = useState(10)
+  const [showAISafety, setShowAISafety] = useState(false)
   const messagesEndRef = useRef(null)
   const isGuest = !user
 
@@ -52,6 +54,12 @@ export default function Chat({ user }) {
       // Set guest name
       setUserName('Guest')
       
+      // Check if guest has seen AI Safety
+      const guestSeenSafety = localStorage.getItem('guestSeenAISafety')
+      if (!guestSeenSafety) {
+        setShowAISafety(true)
+      }
+      
       // Force guest to use only Air or Base mode
       if (mode !== 'air' && mode !== 'base') {
         setMode('base')
@@ -62,6 +70,11 @@ export default function Chat({ user }) {
     
     const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]
     setWelcomeMessage(randomMessage)
+    
+    // Listen for AI Safety open event from warning text
+    const handleOpenAISafety = () => setShowAISafety(true)
+    window.addEventListener('openAISafety', handleOpenAISafety)
+    return () => window.removeEventListener('openAISafety', handleOpenAISafety)
   }, [user])
 
 
@@ -69,7 +82,7 @@ export default function Chat({ user }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('uploads_left, pro_max_uses_left, pro_max_last_reset, pro_lite_uses_left, pro_lite_last_reset, display_name')
+        .select('uploads_left, pro_max_uses_left, pro_max_last_reset, pro_lite_uses_left, pro_lite_last_reset, display_name, username, seen_ai_safety')
         .eq('id', user.id)
         .single()
 
@@ -77,9 +90,15 @@ export default function Chat({ user }) {
       if (data) {
         setUploadsLeft(data.uploads_left)
         
-        // Set user name from display_name or email
-        const name = data.display_name || user.email?.split('@')[0] || 'there'
+        // Set user name from display_name, username, or email username part
+        const emailUsername = user.email?.split('@')[0] || 'there'
+        const name = data.display_name || data.username || emailUsername
         setUserName(name)
+        
+        // Show AI Safety modal if user hasn't seen it
+        if (!data.seen_ai_safety) {
+          setShowAISafety(true)
+        }
         
         // Check if we need to reset Pro Max uses (new day)
         const lastReset = data.pro_max_last_reset ? new Date(data.pro_max_last_reset) : null
@@ -406,8 +425,35 @@ export default function Chat({ user }) {
     }
   }
 
+  const handleAcceptAISafety = async () => {
+    setShowAISafety(false)
+    
+    if (isGuest) {
+      // Mark as seen in localStorage for guests
+      localStorage.setItem('guestSeenAISafety', 'true')
+    } else {
+      // Mark as seen in database for logged-in users
+      try {
+        await supabase
+          .from('profiles')
+          .update({ seen_ai_safety: true })
+          .eq('id', user.id)
+      } catch (error) {
+        console.error('Error updating AI safety status:', error)
+      }
+    }
+  }
+
   return (
     <div className="flex h-screen bg-[#212121]">
+      {/* AI Safety Modal */}
+      {showAISafety && (
+        <AISafetyModal 
+          onAccept={handleAcceptAISafety}
+          onClose={isGuest ? () => setShowAISafety(false) : null}
+        />
+      )}
+
       {/* Login Popup for Guests */}
       {showLoginPopup && (
         <LoginPopup onClose={() => setShowLoginPopup(false)} />
