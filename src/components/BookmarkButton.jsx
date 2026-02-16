@@ -15,6 +15,7 @@ export default function BookmarkButton({
   const [loading, setLoading] = useState(false)
 
   const handleBookmark = async () => {
+    console.log('Bookmark clicked - userId:', userId)
     if (!userId) {
       alert('Please sign in to bookmark messages')
       return

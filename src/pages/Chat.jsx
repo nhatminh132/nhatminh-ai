@@ -536,6 +536,9 @@ export default function Chat({ user }) {
                     isUser={msg.isUser}
                     model={msg.model}
                     isStreaming={msg.isStreaming || false}
+                    messageIndex={index}
+                    conversationId={currentChatId}
+                    userId={user?.id}
                   />
                 ))}
                 <div ref={messagesEndRef} />
