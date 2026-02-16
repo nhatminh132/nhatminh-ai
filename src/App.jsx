@@ -41,6 +41,7 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/pornhub-troll" element={<PornhubTroll />} />
+        <Route path="/study" element={session ? <StudyDashboard user={session.user} /> : <Navigate to="/" replace />} />
         <Route
           path="/"
           element={<Chat user={session?.user || null} />}
