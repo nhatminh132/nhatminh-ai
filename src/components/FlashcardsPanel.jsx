@@ -19,25 +19,29 @@ export default function FlashcardsPanel({ userId, onClose }) {
 
   const loadDecks = async () => {
     try {
+      // Get unique deck names from flashcards
       const { data, error } = await supabase
-        .from('flashcard_decks')
-        .select('*')
+        .from('flashcards')
+        .select('deck_name')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false })
 
       if (error) throw error
-      setDecks(data || [])
+      
+      // Get unique deck names
+      const uniqueDecks = [...new Set(data.map(f => f.deck_name))]
+      setDecks(uniqueDecks.map((name, i) => ({ id: i, name })))
     } catch (error) {
       console.error('Error loading decks:', error)
     }
   }
 
-  const loadFlashcards = async (deckId) => {
+  const loadFlashcards = async (deckName) => {
     try {
       const { data, error } = await supabase
         .from('flashcards')
         .select('*')
-        .eq('deck_id', deckId)
+        .eq('user_id', userId)
+        .eq('deck_name', deckName)
         .order('created_at')
 
       if (error) throw error
@@ -48,17 +52,9 @@ export default function FlashcardsPanel({ userId, onClose }) {
   }
 
   const handleCreateDeck = async (name, topicId) => {
-    try {
-      const { error } = await supabase
-        .from('flashcard_decks')
-        .insert({ user_id: userId, name, topic_id: topicId })
-
-      if (error) throw error
-      loadDecks()
-      setShowNewDeck(false)
-    } catch (error) {
-      console.error('Error creating deck:', error)
-    }
+    // Just add deck to local state - cards will be created later
+    setDecks([...decks, { id: decks.length, name }])
+    setShowNewDeck(false)
   }
 
   const handleCreateCard = async (front, back) => {
