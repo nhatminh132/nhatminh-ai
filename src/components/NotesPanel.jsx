@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import AIFlashcardGenerator from './AIFlashcardGenerator'
+import ExportImport from './ExportImport'
 
 export default function NotesPanel({ userId, onClose }) {
   const [notes, setNotes] = useState([])
@@ -203,6 +204,11 @@ export default function NotesPanel({ userId, onClose }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 px-4 py-2 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+              <ExportImport 
+                userId={userId}
+                dataType="notes"
+                onImportComplete={loadNotes}
               />
               <button
                 onClick={() => setShowNewNote(true)}

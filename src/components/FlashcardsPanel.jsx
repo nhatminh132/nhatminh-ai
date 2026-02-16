@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import ExportImport from './ExportImport'
 
 export default function FlashcardsPanel({ userId, onClose }) {
   const [decks, setDecks] = useState([])
