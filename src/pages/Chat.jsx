@@ -235,14 +235,14 @@ export default function Chat({ user }) {
     try {
       console.log('🎯 Generating title for:', firstMessage.substring(0, 50))
       
-      // Use llama model to generate concise title
+      // Use better model for higher quality titles
       const response = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `Generate a very short title (max 5 words) for this conversation: "${firstMessage}"`,
-          model: 'llama-3.1-8b-instant',
-          systemPrompt: 'You are a title generator. Respond with ONLY the title, nothing else. Keep it under 5 words.',
+          message: `Create a concise, descriptive title (3-5 words maximum) for a conversation that starts with: "${firstMessage.substring(0, 200)}"`,
+          model: 'llama-3.3-70b-versatile',
+          systemPrompt: 'You are an expert at creating concise, clear conversation titles. Output ONLY the title text with no quotes, explanations, or extra words. Maximum 5 words.',
           conversationHistory: []
         })
       })
