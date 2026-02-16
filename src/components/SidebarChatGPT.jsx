@@ -266,6 +266,9 @@ export default function SidebarChatGPT({
 
   return (
     <>
+      {/* Flashcards Panel */}
+      {showFlashcards && <FlashcardsPanel userId={userId} onClose={() => setShowFlashcards(false)} />}
+
       {/* Notes Panel */}
       {showNotes && <NotesPanel userId={userId} onClose={() => setShowNotes(false)} />}
 
@@ -557,6 +560,12 @@ export default function SidebarChatGPT({
                 <path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1zm0 3a.5.5 0 0 1 0-1h6a.5.5 0 0 1 0 1zm0 3a.5.5 0 0 1 0-1h6a.5.5 0 0 1 0 1zm0 3a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1z"/>
               </svg>
               {!isMinimized && <span>Notes</span>}
+            </button>
+            <button onClick={() => setShowFlashcards(true)} className={`w-full hover:bg-[#2f2f2f] text-white px-3 py-2.5 rounded-lg transition flex items-center ${isMinimized ? 'justify-center' : 'gap-3'}`} title="Flashcards">
+              <svg xmlns="http://www.w3.org/2000/svg" className={`${isMinimized ? 'w-6 h-6' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 16 16">
+                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5z"/>
+              </svg>
+              {!isMinimized && <span>Flashcards</span>}
             </button>
             <button onClick={() => setShowBookmarks(true)} className={`w-full hover:bg-[#2f2f2f] text-white px-3 py-2.5 rounded-lg transition flex items-center ${isMinimized ? 'justify-center' : 'gap-3'}`} title="Bookmarks">
               <svg xmlns="http://www.w3.org/2000/svg" className={`${isMinimized ? 'w-6 h-6' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 16 16">
