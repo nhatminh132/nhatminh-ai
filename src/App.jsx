@@ -4,6 +4,7 @@ import { supabase } from './lib/supabaseClient'
 import Login from './pages/Login'
 import Chat from './pages/Chat'
 import PornhubTroll from './pages/PornhubTroll'
+import StudyDashboard from './pages/StudyDashboard'
 
 export default function App() {
   const [session, setSession] = useState(null)
