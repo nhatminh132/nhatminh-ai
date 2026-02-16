@@ -266,6 +266,11 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
               Recording... {formatDuration(recordingDuration)}
             </div>
           )}
+
+          {/* AI Warning Text */}
+          <div className="mt-2 text-xs text-gray-500 text-center">
+            AI can make mistakes. Check important info.
+          </div>
         </div>
       </form>
     </div>
