@@ -16,17 +16,15 @@ vercel
 In your Vercel dashboard or via CLI, add these environment variables:
 
 ```bash
-vercel env add GROQ_API_KEY
-# Paste your Groq API key from .env.local
-
+# Option 1: Use VITE_ prefixed variables (from .env.local)
+vercel env add VITE_GROQ_API_KEY
 vercel env add VITE_SUPABASE_URL
-# Paste your Supabase URL from .env.local
-
 vercel env add VITE_SUPABASE_ANON_KEY
-# Paste your Supabase anon key from .env.local
-
 vercel env add VITE_GEMINI_API_KEY
-# Paste your Gemini API key from .env.local
+
+# Option 2: Or add GROQ_API_KEY separately for backend
+vercel env add GROQ_API_KEY
+# (The backend reads from either GROQ_API_KEY or VITE_GROQ_API_KEY)
 ```
 
 ### 3. Deploy
