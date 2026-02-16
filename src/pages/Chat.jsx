@@ -253,36 +253,32 @@ export default function Chat({ user }) {
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
-      let fullResponse = ''
+      let title = ''
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         const chunk = decoder.decode(value)
-        fullResponse += chunk
         
-        // Parse streaming chunks - format is "data: {json}\n\n"
-        if (chunk.includes('data: ')) {
-          try {
-            const jsonMatch = chunk.match(/data: ({.*?})/g)
-            if (jsonMatch) {
-              jsonMatch.forEach(match => {
-                const json = JSON.parse(match.replace('data: ', ''))
-                if (json.content) {
-                  fullResponse = json.content
-                }
-              })
+        // Parse each chunk - format is "data: {json}\n\n"
+        const lines = chunk.split('\n')
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonStr = line.substring(6) // Remove "data: " prefix
+              const json = JSON.parse(jsonStr)
+              if (json.content) {
+                title += json.content // Accumulate content
+              }
+            } catch (e) {
+              // Skip parsing errors
             }
-          } catch (e) {
-            // Skip parsing errors
           }
         }
       }
 
-      // Clean up title and update conversation
-      let title = fullResponse.trim().replace(/^["']|["']$/g, '') // Remove quotes
-      // Remove any remaining "data: {json}" format
-      title = title.replace(/data: \{.*?\}/g, '').trim()
+      // Clean up title
+      title = title.trim().replace(/^["']|["']$/g, '') // Remove quotes
       console.log('✅ Generated title:', title)
       
       if (title && title.length > 0) {
