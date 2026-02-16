@@ -413,17 +413,18 @@ export default function Chat({ user }) {
       )}
 
       {/* Sidebar - always visible, toggles between minimized and expanded */}
-      {!isGuest && <SidebarChatGPT
-        userId={user.id}
+      <SidebarChatGPT
+        userId={user?.id}
         currentChatId={currentChatId}
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
         isMinimized={sidebarMinimized}
         onToggleMinimize={() => setSidebarMinimized(!sidebarMinimized)}
-        userEmail={user.email}
+        userEmail={user?.email}
         uploadsLeft={uploadsLeft}
         onToggleGallery={() => setShowGallery(!showGallery)}
-      />}
+        isGuest={isGuest}
+      />
 
       {/* Gallery Modal */}
       {showGallery && (
@@ -440,6 +441,7 @@ export default function Chat({ user }) {
           sidebarMinimized={sidebarMinimized}
           isTemporaryChat={isTemporaryChat}
           onToggleTemporaryChat={isGuest ? null : handleToggleTemporaryChat}
+          isGuest={isGuest}
         />
         
         {messages.length === 0 ? (
