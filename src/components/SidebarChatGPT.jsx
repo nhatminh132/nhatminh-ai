@@ -16,7 +16,8 @@ export default function SidebarChatGPT({
   userEmail, 
   uploadsLeft, 
   onToggleGallery,
-  isGuest = false
+  isGuest = false,
+  refreshTrigger
 }) {
   // Guest mode - show only auth buttons
   if (isGuest) {
@@ -126,12 +127,23 @@ export default function SidebarChatGPT({
           table: 'conversations',
           filter: `user_id=eq.${userId}`
         }, 
-        () => fetchChats()
+        () => {
+          console.log('🔄 Conversation change detected, refreshing...')
+          fetchChats()
+        }
       )
       .subscribe()
 
     return () => subscription.unsubscribe()
   }, [userId])
+
+  // Refresh chats when a new chat is created
+  useEffect(() => {
+    if (refreshTrigger) {
+      console.log('🔄 New chat detected, refreshing sidebar...')
+      fetchChats()
+    }
+  }, [refreshTrigger])
 
   const loadProfile = async () => {
     try {

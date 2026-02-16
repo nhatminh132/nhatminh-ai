@@ -547,6 +547,7 @@ export default function Chat({ user }) {
         uploadsLeft={uploadsLeft}
         onToggleGallery={() => setShowGallery(!showGallery)}
         isGuest={isGuest}
+        refreshTrigger={currentChatId}
       />
 
       {/* Gallery Modal */}
