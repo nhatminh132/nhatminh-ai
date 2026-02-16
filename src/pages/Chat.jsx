@@ -253,16 +253,36 @@ export default function Chat({ user }) {
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
-      let title = ''
+      let fullResponse = ''
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        title += decoder.decode(value)
+        const chunk = decoder.decode(value)
+        fullResponse += chunk
+        
+        // Parse streaming chunks - format is "data: {json}\n\n"
+        if (chunk.includes('data: ')) {
+          try {
+            const jsonMatch = chunk.match(/data: ({.*?})/g)
+            if (jsonMatch) {
+              jsonMatch.forEach(match => {
+                const json = JSON.parse(match.replace('data: ', ''))
+                if (json.content) {
+                  fullResponse = json.content
+                }
+              })
+            }
+          } catch (e) {
+            // Skip parsing errors
+          }
+        }
       }
 
       // Clean up title and update conversation
-      title = title.trim().replace(/^["']|["']$/g, '') // Remove quotes
+      let title = fullResponse.trim().replace(/^["']|["']$/g, '') // Remove quotes
+      // Remove any remaining "data: {json}" format
+      title = title.replace(/data: \{.*?\}/g, '').trim()
       console.log('✅ Generated title:', title)
       
       if (title && title.length > 0) {
