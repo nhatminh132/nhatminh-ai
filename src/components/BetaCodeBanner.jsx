@@ -2,19 +2,11 @@ import React, { useState, useEffect } from 'react'
 
 export default function BetaCodeBanner() {
   const [isVisible, setIsVisible] = useState(false)
-  const [isDismissed, setIsDismissed] = useState(false)
 
   useEffect(() => {
-    // Check if banner was dismissed
-    const dismissed = localStorage.getItem('betaBannerDismissed')
-    if (dismissed) {
-      setIsDismissed(true)
-      return
-    }
-
-    // Check if current date is within promotion period
+    // Check if current date is within promotion period (16/2/2026 - 20/3/2026)
     const now = new Date()
-    const startDate = new Date('2026-02-22')
+    const startDate = new Date('2026-02-16')
     const endDate = new Date('2026-03-20')
 
     if (now >= startDate && now <= endDate) {
@@ -23,12 +15,10 @@ export default function BetaCodeBanner() {
   }, [])
 
   const handleDismiss = () => {
-    localStorage.setItem('betaBannerDismissed', 'true')
     setIsVisible(false)
-    setIsDismissed(true)
   }
 
-  if (!isVisible || isDismissed) return null
+  if (!isVisible) return null
 
   return (
     <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 relative">
