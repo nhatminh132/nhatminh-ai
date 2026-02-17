@@ -278,40 +278,35 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
             </div>
           )}
 
-          {/* Token Usage Indicator */}
-          {tokenLimit && (
-            <div className="mt-2 flex items-center justify-center gap-2">
-              <div className="flex-1 max-w-xs">
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>Token Usage (per minute)</span>
-                  <span className={tokenUsage / tokenLimit > 0.8 ? 'text-yellow-500 font-semibold' : ''}>
-                    {tokenUsage.toLocaleString()} / {tokenLimit.toLocaleString()}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-1.5">
-                  <div 
-                    className={`h-1.5 rounded-full transition-all ${
-                      tokenUsage / tokenLimit > 0.9 ? 'bg-red-500' :
-                      tokenUsage / tokenLimit > 0.7 ? 'bg-yellow-500' :
-                      'bg-green-500'
-                    }`}
-                    style={{ width: `${Math.min((tokenUsage / tokenLimit) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          )}
+Tool call argument 'replace' pruned from message history.
 
-          {/* AI Warning Text */}
-          <div className="mt-2 text-xs text-gray-500 text-center">
-            AI can make mistakes. Check important info. Please read{' '}
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('openAISafety'))}
-              className="text-blue-400 hover:text-blue-300 underline"
-            >
-              AI Safety guidelines
-            </button>
-            {' '}before use.
+          {/* AI Warning Text & Made By */}
+          <div className="mt-2 text-xs text-gray-500 text-center flex flex-col gap-1">
+            <div>
+              AI can make mistakes. Check important info. Please read{' '}
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('openAISafety'))}
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                AI Safety guidelines
+              </button>
+              {' '}before use.
+            </div>
+            <div className="text-gray-600">
+              Made by{' '}
+              <a 
+                href="https://iamnhatminh.vercel.app" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-white font-semibold hover:text-white transition-all"
+                style={{
+                  textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4)',
+                  animation: 'glow 2s ease-in-out infinite alternate'
+                }}
+              >
+                Nhat Minh
+              </a>
+            </div>
           </div>
         </div>
       </form>
