@@ -1,9 +1,14 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useNavigate } from 'react-router-dom'
 
 export default function LoginPopup({ onClose }) {
   const navigate = useNavigate()
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -35,6 +40,38 @@ export default function LoginPopup({ onClose }) {
     navigate('/pornhub-troll')
   }
 
+  const handleEmailAuth = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          }
+        })
+        if (error) throw error
+        alert('Check your email for the confirmation link!')
+        onClose()
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+        onClose()
+      }
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
       <div className="bg-[#2f2f2f] rounded-2xl shadow-2xl max-w-md w-full p-8 relative border border-gray-700">
@@ -50,33 +87,63 @@ export default function LoginPopup({ onClose }) {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-white mb-2">Sign in to continue</h2>
+          <h2 className="text-3xl font-bold text-white mb-2">{isSignUp ? 'Create your account' : 'Sign in to continue'}</h2>
           <p className="text-gray-400 text-sm">
             Unlock unlimited AI access and save your conversations
           </p>
         </div>
 
-        {/* Benefits */}
-        <div className="mb-6 space-y-2">
-          <div className="flex items-center gap-3 text-sm text-gray-300">
-            <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span>Unlimited access to all AI modes</span>
+        {/* Email/Password Form */}
+        <form onSubmit={handleEmailAuth} className="mb-6">
+          <div className="space-y-3">
+            <input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-4 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {error && (
+              <p className="text-red-400 text-sm">{error}</p>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+            >
+              {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+            </button>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-300">
-            <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span>Save and access conversation history</span>
+          
+          <button
+            type="button"
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="w-full mt-3 text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-700"></div>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-300">
-            <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span>Pro, Pro Max, and Ultra AI models</span>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-[#2f2f2f] text-gray-400">Or continue with</span>
           </div>
         </div>
+
 
         {/* Login Buttons */}
         <div className="space-y-3">
