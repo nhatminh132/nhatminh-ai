@@ -1,0 +1,56 @@
+# Feature Ideas for Nhat Minh AI
+
+## 📊 Analytics & Insights
+- Track most-used AI modes
+- Show study streak calendar (like GitHub contributions)
+- Weekly/monthly study reports
+- Most studied topics (from notes/flashcards)
+
+## 🎨 Personalization
+- Custom themes (not just dark mode - colors, accents)
+- Conversation templates (e.g., "Help me learn [topic]")
+- Custom AI personalities/tones (formal, casual, ELI5)
+- Profile avatars/customization
+
+## 🤝 Collaboration
+- Share individual chats via link
+- Public/private study notes
+- Collaborative flashcard decks
+- Study groups/rooms
+
+## 🎯 Learning Features
+- Quiz yourself based on chat history
+- Spaced repetition reminders for flashcards
+- "Explain again" button (simpler explanation)
+- Progress tracking per subject
+- Learning goals and milestones
+
+## 🔧 Productivity
+- Voice input/output (text-to-speech, speech-to-text)
+- Chat folders/tags
+- Pin important chats
+- Archive old chats
+- Bulk operations (delete multiple, export all)
+
+## 🌟 AI Enhancements
+- Image generation (DALL-E, Stable Diffusion)
+- Code execution/sandbox
+- Web search integration
+- PDF upload and analysis
+- YouTube video summarization
+
+## 📱 Platform
+- Mobile app (React Native)
+- Browser extension
+- Desktop app (Electron)
+- API for developers
+
+## 🎓 Study-Specific
+- Citation generator
+- Study timer/Pomodoro
+- Mind map generator from notes
+- Summary generator for long chats
+- Homework helper mode
+
+---
+Generated: 2026-02-16

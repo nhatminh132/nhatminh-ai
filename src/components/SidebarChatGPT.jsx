@@ -114,9 +114,16 @@ export default function SidebarChatGPT({
   const [showNotes, setShowNotes] = useState(false)
   const [showFlashcards, setShowFlashcards] = useState(false)
   const [contextMenu, setContextMenu] = useState(null)
+  const [showArchived, setShowArchived] = useState(false)
+  const [folders, setFolders] = useState([])
+  const [selectedFolder, setSelectedFolder] = useState(null)
+  const [showFolderModal, setShowFolderModal] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [newFolderColor, setNewFolderColor] = useState('#3b82f6')
 
   useEffect(() => {
     fetchChats()
+    fetchFolders()
     loadProfile()
     
     const subscription = supabase
@@ -216,6 +223,23 @@ export default function SidebarChatGPT({
     }
   }
 
+  const fetchFolders = async () => {
+    if (!userId) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('chat_folders')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+      setFolders(data || [])
+    } catch (error) {
+      console.error('Error fetching folders:', error)
+    }
+  }
+
   const handleRenameChat = async (chatId, newTitle) => {
     if (!newTitle.trim()) {
       alert('Please enter a valid title')
@@ -272,6 +296,115 @@ export default function SidebarChatGPT({
     }
   }
 
+  const handleTogglePin = async (chatId, e) => {
+    e.stopPropagation()
+    
+    try {
+      const chat = chats.find(c => c.id === chatId)
+      const newPinState = !chat.is_pinned
+      
+      const { error } = await supabase
+        .from('conversations')
+        .update({ is_pinned: newPinState })
+        .eq('id', chatId)
+
+      if (error) throw error
+      
+      setChats(prev => prev.map(c => 
+        c.id === chatId ? { ...c, is_pinned: newPinState } : c
+      ))
+    } catch (error) {
+      console.error('Error toggling pin:', error)
+      alert('Failed to pin/unpin conversation.')
+    }
+  }
+
+  const handleToggleArchive = async (chatId, e) => {
+    e.stopPropagation()
+    
+    try {
+      const chat = chats.find(c => c.id === chatId)
+      const newArchiveState = !chat.is_archived
+      
+      const { error } = await supabase
+        .from('conversations')
+        .update({ is_archived: newArchiveState })
+        .eq('id', chatId)
+
+      if (error) throw error
+      
+      setChats(prev => prev.map(c => 
+        c.id === chatId ? { ...c, is_archived: newArchiveState } : c
+      ))
+    } catch (error) {
+      console.error('Error toggling archive:', error)
+      alert('Failed to archive/unarchive conversation.')
+    }
+  }
+
+  const renderChatItem = (chat) => (
+    <div 
+      key={chat.id} 
+      className={`relative group rounded-lg mb-1 transition ${currentChatId === chat.id ? 'bg-[#3f3f3f]' : 'hover:bg-[#2f2f2f]'}`}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        setContextMenu({ chatId: chat.id, chatTitle: chat.title, x: e.clientX, y: e.clientY })
+      }}
+    >
+      <button onClick={() => onSelectChat(chat)} className="w-full text-left px-3 py-2">
+        <div className="text-sm text-white truncate pr-20 flex items-center gap-2">
+          {chat.is_pinned && (
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="text-yellow-500 flex-shrink-0" viewBox="0 0 16 16">
+              <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
+            </svg>
+          )}
+          <span className="truncate">{chat.title}</span>
+        </div>
+      </button>
+      
+      {/* Action buttons on hover */}
+      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+        {/* Pin button */}
+        <button
+          onClick={(e) => handleTogglePin(chat.id, e)}
+          className="p-1.5 hover:bg-[#4a4a4a] rounded transition-colors"
+          title={chat.is_pinned ? "Unpin" : "Pin"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className={`${chat.is_pinned ? 'text-yellow-500' : 'text-gray-400'} hover:text-white transition-colors`} viewBox="0 0 16 16">
+            <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
+          </svg>
+        </button>
+        
+        {/* Rename button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            setEditingChatId(chat.id)
+            setEditingTitle(chat.title)
+          }}
+          className="p-1.5 hover:bg-[#4a4a4a] rounded transition-colors"
+          title="Rename"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="text-gray-400 hover:text-white transition-colors" viewBox="0 0 16 16">
+            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+          </svg>
+        </button>
+        
+        {/* Delete button */}
+        <button
+          onClick={(e) => handleDeleteChat(chat.id, e)}
+          className="p-1.5 hover:bg-red-600/20 rounded transition-colors"
+          title="Delete"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="text-gray-400 hover:text-red-400 transition-colors" viewBox="0 0 16 16">
+            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+
   const groupChatsByDate = (chats) => {
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -294,11 +427,18 @@ export default function SidebarChatGPT({
     }
   }
 
-  const filteredChats = chats.filter(chat =>
-    chat.title?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredChats = chats.filter(chat => {
+    const matchesSearch = chat.title?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesArchive = showArchived ? chat.is_archived : !chat.is_archived
+    const matchesFolder = selectedFolder ? chat.folder_id === selectedFolder : true
+    return matchesSearch && matchesArchive && matchesFolder
+  })
 
-  const groupedChats = groupChatsByDate(filteredChats)
+  // Separate pinned and unpinned chats
+  const pinnedChats = filteredChats.filter(chat => chat.is_pinned)
+  const unpinnedChats = filteredChats.filter(chat => !chat.is_pinned)
+
+  const groupedChats = groupChatsByDate(unpinnedChats)
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -327,6 +467,18 @@ export default function SidebarChatGPT({
           onClick={(e) => e.stopPropagation()}
         >
           <button
+            onClick={(e) => {
+              handleTogglePin(contextMenu.chatId, e)
+              setContextMenu(null)
+            }}
+            className="w-full text-left px-4 py-2 hover:bg-[#3f3f3f] text-white text-sm flex items-center gap-3 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
+            </svg>
+            {chats.find(c => c.id === contextMenu.chatId)?.is_pinned ? 'Unpin' : 'Pin'}
+          </button>
+          <button
             onClick={() => {
               setEditingChatId(contextMenu.chatId)
               setEditingTitle(contextMenu.chatTitle)
@@ -338,6 +490,18 @@ export default function SidebarChatGPT({
               <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
             </svg>
             Rename
+          </button>
+          <button
+            onClick={(e) => {
+              handleToggleArchive(contextMenu.chatId, e)
+              setContextMenu(null)
+            }}
+            className="w-full text-left px-4 py-2 hover:bg-[#3f3f3f] text-white text-sm flex items-center gap-3 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5zm13-3H1v2h14zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+            </svg>
+            {chats.find(c => c.id === contextMenu.chatId)?.is_archived ? 'Unarchive' : 'Archive'}
           </button>
           <div className="border-t border-[#4a4a4a] my-1"></div>
           <button
@@ -684,55 +848,44 @@ export default function SidebarChatGPT({
         <div className="flex-1 overflow-y-auto px-2 py-2">
           {!isMinimized && (
             <>
+              {/* Archive toggle button */}
+              <div className="mb-2">
+                <button
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="w-full px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-[#2f2f2f] rounded-lg transition flex items-center justify-between"
+                >
+                  <span>{showArchived ? 'Show Active' : 'Show Archived'}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5zm13-3H1v2h14zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+                  </svg>
+                </button>
+              </div>
+
               {loading ? (
                 <div className="text-center text-gray-500 mt-4">Loading...</div>
               ) : filteredChats.length === 0 ? (
                 <div className="text-center text-gray-500 mt-4 text-sm">No chats yet</div>
               ) : (
-                filteredChats.map(chat => (
-                  <div 
-                    key={chat.id} 
-                    className={`relative group rounded-lg mb-1 transition ${currentChatId === chat.id ? 'bg-[#3f3f3f]' : 'hover:bg-[#2f2f2f]'}`}
-                    onContextMenu={(e) => {
-                      e.preventDefault()
-                      setContextMenu({ chatId: chat.id, chatTitle: chat.title, x: e.clientX, y: e.clientY })
-                    }}
-                  >
-                    <button onClick={() => onSelectChat(chat)} className="w-full text-left px-3 py-2">
-                      <div className="text-sm text-white truncate pr-16">{chat.title}</div>
-                    </button>
-                    
-                    {/* Action buttons on hover */}
-                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-                      {/* Rename button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingChatId(chat.id)
-                          setEditingTitle(chat.title)
-                        }}
-                        className="p-1.5 hover:bg-[#4a4a4a] rounded transition-colors"
-                        title="Rename (Click or press R)"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="text-gray-400 hover:text-white transition-colors" viewBox="0 0 16 16">
-                          <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                <>
+                  {/* Pinned Chats */}
+                  {pinnedChats.length > 0 && (
+                    <>
+                      <div className="text-xs text-gray-500 font-semibold px-3 py-2 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                          <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
                         </svg>
-                      </button>
-                      
-                      {/* Delete button */}
-                      <button
-                        onClick={(e) => handleDeleteChat(chat.id, e)}
-                        className="p-1.5 hover:bg-red-600/20 rounded transition-colors"
-                        title="Delete (Click or press Delete)"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="text-gray-400 hover:text-red-400 transition-colors" viewBox="0 0 16 16">
-                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                          <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))
+                        PINNED
+                      </div>
+                      {pinnedChats.map(chat => renderChatItem(chat))}
+                    </>
+                  )}
+
+                  {/* Regular Chats */}
+                  {unpinnedChats.length > 0 && pinnedChats.length > 0 && (
+                    <div className="text-xs text-gray-500 font-semibold px-3 py-2 mt-2">CHATS</div>
+                  )}
+                  {unpinnedChats.map(chat => renderChatItem(chat))}
+                </>
               )}
             </>
           )}

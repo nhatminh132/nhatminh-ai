@@ -18,6 +18,9 @@ export async function streamGroq({
   for (const currentModel of modelsToTry) {
     try {
       console.log(`Attempting to use model: ${currentModel}`)
+      
+      // Track start time for latency
+      const startTime = performance.now()
 
       const response = await fetch('/api/groq', {
         method: 'POST',
@@ -40,19 +43,28 @@ export async function streamGroq({
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let fullText = ''
+      let tokenCount = 0
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split('\n')
+        const lines = chunk.split('\\n')
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6)
             if (data === '[DONE]') {
-              return { text: fullText, model: currentModel }
+              const endTime = performance.now()
+              const latencyMs = Math.round(endTime - startTime)
+              
+              return { 
+                text: fullText, 
+                model: currentModel,
+                tokenCount: tokenCount || estimateTokenCount(fullText),
+                latencyMs
+              }
             }
 
             try {
@@ -61,6 +73,10 @@ export async function streamGroq({
                 fullText += parsed.content
                 onChunk(parsed.content)
               }
+              // Capture token count if provided by API
+              if (parsed.usage?.total_tokens) {
+                tokenCount = parsed.usage.total_tokens
+              }
             } catch (e) {
               // Skip malformed JSON
             }
@@ -68,7 +84,15 @@ export async function streamGroq({
         }
       }
 
-      return { text: fullText, model: currentModel }
+      const endTime = performance.now()
+      const latencyMs = Math.round(endTime - startTime)
+      
+      return { 
+        text: fullText, 
+        model: currentModel,
+        tokenCount: tokenCount || estimateTokenCount(fullText),
+        latencyMs
+      }
     } catch (error) {
       lastError = error
       console.warn(`Model ${currentModel} failed:`, error.message)
@@ -80,4 +104,9 @@ export async function streamGroq({
   }
 
   throw new Error(`All Groq models failed. Last error: ${lastError?.message}`)
+}
+
+// Estimate token count (rough approximation: ~4 chars per token)
+function estimateTokenCount(text) {
+  return Math.ceil(text.length / 4)
 }

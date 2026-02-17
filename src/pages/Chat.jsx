@@ -168,7 +168,7 @@ export default function Chat({ user }) {
         if (messages && messages.length > 0) {
           const formattedMessages = messages.flatMap(msg => [
             { text: msg.question, isUser: true, model: null },
-            { text: msg.answer, isUser: false, model: msg.model_used }
+            { text: msg.answer, isUser: false, model: msg.model_used, tokenCount: msg.token_count, latencyMs: msg.latency_ms }
           ])
           setMessages(formattedMessages)
         }
@@ -178,7 +178,7 @@ export default function Chat({ user }) {
     }
   }
 
-  const saveChatHistory = async (question, answer, modelUsed) => {
+  const saveChatHistory = async (question, answer, modelUsed, tokenCount, latencyMs) => {
     try {
       // If no current chat, create a new conversation with AI-generated title
       if (!currentChatId) {
@@ -218,6 +218,8 @@ export default function Chat({ user }) {
             question,
             answer,
             model_used: modelUsed,
+            token_count: tokenCount,
+            latency_ms: latencyMs,
           })
 
         if (msgError) throw msgError
@@ -230,6 +232,8 @@ export default function Chat({ user }) {
             question,
             answer,
             model_used: modelUsed,
+            token_count: tokenCount,
+            latency_ms: latencyMs,
           })
 
         if (error) throw error
@@ -348,7 +352,7 @@ export default function Chat({ user }) {
       // Format messages for display
       const chatMessages = data.flatMap(msg => [
         { text: msg.question, isUser: true, model: null },
-        { text: msg.answer, isUser: false, model: msg.model_used }
+        { text: msg.answer, isUser: false, model: msg.model_used, tokenCount: msg.token_count, latencyMs: msg.latency_ms }
       ])
       
       setMessages(chatMessages)
@@ -358,7 +362,7 @@ export default function Chat({ user }) {
     }
   }
 
-  const handleSendMessage = async (message) => {
+  const handleSendMessage = async (message, isEdit = false, editIndex = null) => {
     if (loading) return
 
     // Show login popup for guest users
@@ -373,19 +377,25 @@ export default function Chat({ user }) {
       }
     }
 
+    // If editing, remove messages after the edit point
+    if (isEdit && editIndex !== null) {
+      setMessages(prev => prev.slice(0, editIndex))
+    }
+
     // Add user message
     setMessages(prev => [...prev, { text: message, isUser: true, model: null }])
     setLoading(true)
 
     // Add placeholder for AI response with "Using..." status
-    const aiMessageIndex = messages.length + 1
+    const aiMessageIndex = (isEdit && editIndex !== null) ? editIndex + 1 : messages.length + 1
     setMessages(prev => [...prev, { text: '', isUser: false, model: null, isStreaming: true }])
 
     try {
       let fullResponse = ''
       let currentModel = ''
+      let responseMetadata = {}
       
-      const { text, model } = await routeAIRequest(message, (chunk, streamModel) => {
+      const result = await routeAIRequest(message, (chunk, streamModel) => {
         fullResponse += chunk
         currentModel = streamModel || model
         setMessages(prev => {
@@ -400,6 +410,9 @@ export default function Chat({ user }) {
         })
       }, mode, messages)
 
+      const { text, model, tokenCount, latencyMs } = result
+      responseMetadata = { tokenCount, latencyMs }
+
       // Update with final response and model - mark streaming as complete
       setMessages(prev => {
         const newMessages = [...prev]
@@ -407,6 +420,8 @@ export default function Chat({ user }) {
           text, 
           isUser: false, 
           model,
+          tokenCount,
+          latencyMs,
           isStreaming: false // Streaming complete
         }
         return newMessages
@@ -426,7 +441,7 @@ export default function Chat({ user }) {
       } else {
         // Save to database (skip if temporary chat)
         if (!isTemporaryChat) {
-          await saveChatHistory(message, text, model)
+          await saveChatHistory(message, text, model, responseMetadata.tokenCount, responseMetadata.latencyMs)
         }
       }
     } catch (error) {
@@ -509,6 +524,72 @@ export default function Chat({ user }) {
     }
   }
 
+  const handleEditMessage = (editedMessage, messageIndex) => {
+    // Call handleSendMessage with edited message
+    handleSendMessage(editedMessage, true, messageIndex)
+  }
+
+  const handleGenerateSummary = async () => {
+    if (messages.length === 0) {
+      alert('No messages to summarize')
+      return
+    }
+
+    try {
+      // Create conversation text from messages
+      const conversationText = messages
+        .map((msg, idx) => `${msg.isUser ? 'User' : 'AI'}: ${msg.text}`)
+        .join('\n\n')
+
+      const response = await fetch('/api/groq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Please provide a concise summary (2-3 sentences) of the following conversation:\n\n${conversationText.substring(0, 4000)}`,
+          model: 'llama-3.3-70b-versatile',
+          systemPrompt: 'You are an expert at summarizing conversations. Provide clear, concise summaries that capture the key points and topics discussed.',
+          conversationHistory: []
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let summary = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value)
+        
+        const lines = chunk.split('\n')
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonStr = line.substring(6)
+              const json = JSON.parse(jsonStr)
+              if (json.content) {
+                summary += json.content
+              }
+            } catch (e) {
+              // Skip parsing errors
+            }
+          }
+        }
+      }
+
+      if (summary) {
+        alert(`Conversation Summary:\n\n${summary}`)
+      }
+    } catch (error) {
+      console.error('Error generating summary:', error)
+      alert('Failed to generate summary. Please try again.')
+    }
+  }
+
   const handleAcceptAISafety = async () => {
     setShowAISafety(false)
     
@@ -577,6 +658,8 @@ export default function Chat({ user }) {
           isTemporaryChat={isTemporaryChat}
           onToggleTemporaryChat={isGuest ? null : handleToggleTemporaryChat}
           isGuest={isGuest}
+          onGenerateSummary={handleGenerateSummary}
+          hasMessages={messages.length > 0}
         />
         
         {messages.length === 0 ? (
@@ -627,6 +710,9 @@ export default function Chat({ user }) {
                     messageIndex={index}
                     conversationId={currentChatId}
                     userId={user?.id}
+                    tokenCount={msg.tokenCount}
+                    latencyMs={msg.latencyMs}
+                    onEdit={handleEditMessage}
                   />
                 ))}
                 <div ref={messagesEndRef} />
