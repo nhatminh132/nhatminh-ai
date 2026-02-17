@@ -10,6 +10,7 @@ import LoginPopup from '../components/LoginPopup'
 import AISafetyModal from '../components/AISafetyModal'
 import KeyboardShortcutsHelp from '../components/KeyboardShortcutsHelp'
 import RateLimitWarning from '../components/RateLimitWarning'
+import BetaCodeBanner from '../components/BetaCodeBanner'
 
 // Token limits per mode (TPM = Tokens Per Minute)
 const TOKEN_LIMITS = {
@@ -676,9 +677,13 @@ export default function Chat({ user }) {
   }
 
   return (
-    <div className="flex h-screen bg-[#212121]">
-      {/* Keyboard Shortcuts Help */}
-      {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}
+    <div className="flex flex-col h-screen bg-[#212121]">
+      {/* Beta Code Banner */}
+      {!isGuest && <BetaCodeBanner />}
+      
+      <div className="flex flex-1 overflow-hidden">
+        {/* Keyboard Shortcuts Help */}
+        {showShortcuts && <KeyboardShortcutsHelp onClose={() => setShowShortcuts(false)} />}
 
       {/* AI Safety Modal */}
       {showAISafety && (
@@ -814,6 +819,7 @@ export default function Chat({ user }) {
             />
           </>
         )}
+      </div>
       </div>
     </div>
   )
