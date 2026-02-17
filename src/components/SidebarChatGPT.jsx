@@ -842,7 +842,7 @@ export default function SidebarChatGPT({
       )}
 
 
-      <div className={`${isMinimized ? 'w-16' : 'w-64'} bg-[#212121] h-screen overflow-y-auto transition-[width] duration-300 border-r border-[#3f3f3f]`}>
+      <div className={`${isMinimized ? 'w-16' : 'w-64'} bg-[#212121] h-screen flex flex-col transition-[width] duration-300 border-r border-[#3f3f3f]`}>
         {/* Header with Logo */}
         <div className="p-4 border-b border-[#3f3f3f]">
           <div className="flex justify-center mb-3">
@@ -900,7 +900,7 @@ export default function SidebarChatGPT({
             </button>
           </div>
         </div>
-        <div className="px-2 py-2">
+        <div className="flex-1 overflow-y-auto px-2 py-2">
           {!isMinimized && (
             <>
               {/* Archive toggle button */}
