@@ -206,8 +206,8 @@ const MODEL_CONFIG = {
     label: 'Llama 3.1 8B', 
     displayName: "Meta's Llama 3.1",
     dailyLimit: null, 
-    perMinLimit: 20,
-    maxTokens: 6144,  // 2048 x 3
+    perMinLimit: null,
+    maxTokens: null,  // No limit
     tpm: 10000
   },
   'base': { 
@@ -215,35 +215,35 @@ const MODEL_CONFIG = {
     label: 'OpenAI GPT 20B', 
     displayName: "OpenAI's GPT",
     dailyLimit: null, 
-    perMinLimit: 15,
-    maxTokens: 12288,  // 4096 x 3
+    perMinLimit: null,
+    maxTokens: null,  // No limit
     tpm: 10000
   },
   'pro': { 
     model: 'openai/gpt-oss-120b', 
     label: 'OpenAI GPT 120B', 
     displayName: "OpenAI's GPT Pro",
-    dailyLimit: 200, 
-    perMinLimit: 10,
-    maxTokens: 16384,  // 8192 x 2
+    dailyLimit: 10, 
+    perMinLimit: 3,
+    maxTokens: null,  // No limit
     tpm: 10000
   },
   'pro-max': { 
     model: 'moonshotai/kimi-k2-instruct', 
     label: 'Kimi K2', 
     displayName: "Moonshot's Kimi K2",
-    dailyLimit: 100, 
-    perMinLimit: 50,
-    maxTokens: 32768,  // 16384 x 2
+    dailyLimit: 5, 
+    perMinLimit: 2,
+    maxTokens: null,  // No limit
     tpm: 10000
   },
   'ultra': { 
     model: 'groq/compound', 
     label: 'Groq Compound', 
     displayName: "Groq's Compound AI",
-    dailyLimit: 25, 
-    perMinLimit: 5,
-    maxTokens: 65536,  // 32768 x 2
+    dailyLimit: 3, 
+    perMinLimit: 1,
+    maxTokens: null,  // No limit
     tpm: 10000
   }
 }
