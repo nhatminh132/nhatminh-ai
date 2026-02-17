@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import HelpModal from './HelpModal'
 import SettingsModal from './SettingsModal'
+import PersonalizeModal from './PersonalizeModal'
 import BookmarksPanel from './BookmarksPanel'
 import NotesPanel from './NotesPanel'
 import FlashcardsPanel from './FlashcardsPanel'
@@ -346,48 +347,52 @@ export default function SidebarChatGPT({
     }
   }
 
-  const renderChatItem = (chat) => (
-    <div 
-      key={chat.id} 
-      className={`relative group rounded-lg mb-1 transition ${currentChatId === chat.id ? 'bg-[#3f3f3f]' : 'hover:bg-[#2f2f2f]'}`}
-      onContextMenu={(e) => {
-        e.preventDefault()
-        setContextMenu({ chatId: chat.id, chatTitle: chat.title, x: e.clientX, y: e.clientY })
-      }}
-    >
-      <button onClick={() => onSelectChat(chat)} className="w-full text-left px-3 py-2">
-        <div className="text-sm text-white truncate pr-20 flex items-center gap-2">
-          {chat.is_pinned && (
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="text-yellow-500 flex-shrink-0" viewBox="0 0 16 16">
-              <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
-            </svg>
-          )}
-          <span className="truncate">{chat.title}</span>
-        </div>
-      </button>
-      
-      {/* Menu button */}
-      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            setOpenMenuId(openMenuId === chat.id ? null : chat.id)
-          }}
-          className="p-1.5 hover:bg-[#4a4a4a] rounded transition-colors"
-          title="More options"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="text-gray-400 hover:text-white transition-colors" viewBox="0 0 16 16">
-            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
-          </svg>
+  const renderChatItem = (chat, index) => {
+    // Calculate if dropdown should open upward
+    const shouldOpenUp = index > filteredChats.length - 3
+    
+    return (
+      <div 
+        key={chat.id} 
+        className={`relative group rounded-lg mb-1 transition ${currentChatId === chat.id ? 'bg-[#3f3f3f]' : 'hover:bg-[#2f2f2f]'}`}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setContextMenu({ chatId: chat.id, chatTitle: chat.title, x: e.clientX, y: e.clientY })
+        }}
+      >
+        <button onClick={() => onSelectChat(chat)} className="w-full text-left px-3 py-2">
+          <div className="text-sm text-white truncate pr-20 flex items-center gap-2">
+            {chat.is_pinned && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="text-yellow-500 flex-shrink-0" viewBox="0 0 16 16">
+                <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
+              </svg>
+            )}
+            <span className="truncate">{chat.title}</span>
+          </div>
         </button>
-      </div>
+        
+        {/* Menu button */}
+        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpenMenuId(openMenuId === chat.id ? null : chat.id)
+            }}
+            className="p-1.5 hover:bg-[#4a4a4a] rounded transition-colors"
+            title="More options"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="text-gray-400 hover:text-white transition-colors" viewBox="0 0 16 16">
+              <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+            </svg>
+          </button>
+        </div>
 
-      {/* Dropdown menu */}
-      {openMenuId === chat.id && (
-        <div 
-          className="absolute right-8 top-0 bg-[#2f2f2f] rounded-lg shadow-2xl border border-[#4a4a4a] py-1 z-50 min-w-[160px]"
-          onClick={(e) => e.stopPropagation()}
-        >
+        {/* Dropdown menu */}
+        {openMenuId === chat.id && (
+          <div 
+            className={`absolute right-8 ${shouldOpenUp ? 'bottom-0' : 'top-0'} bg-[#2f2f2f] rounded-lg shadow-2xl border border-[#4a4a4a] py-1 z-50 min-w-[160px]`}
+            onClick={(e) => e.stopPropagation()}
+          >
           <button
             onClick={(e) => {
               handleTogglePin(chat.id, e)
@@ -443,8 +448,9 @@ export default function SidebarChatGPT({
           </button>
         </div>
       )}
-    </div>
-  )
+      </div>
+    )
+  }
 
   const groupChatsByDate = (chats) => {
     const now = new Date()
@@ -601,9 +607,12 @@ export default function SidebarChatGPT({
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
       {/* Settings Modal */}
-      {showSettings && (
-        <SettingsModal 
-          onClose={() => setShowSettings(false)} 
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+
+      {/* Personalize Modal */}
+      {showPersonalize && (
+        <PersonalizeModal
+          onClose={() => setShowPersonalize(false)}
           personality={personality}
           onPersonalityChange={(newPersonality) => {
             setPersonality(newPersonality)
@@ -611,59 +620,6 @@ export default function SidebarChatGPT({
             window.dispatchEvent(new CustomEvent('personalityChanged', { detail: newPersonality }))
           }}
         />
-      )}
-
-      {/* Personalize Modal */}
-      {showPersonalize && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => setShowPersonalize(false)}>
-          <div className="bg-[#2f2f2f] rounded-lg p-6 max-w-2xl w-full border border-[#4a4a4a]" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-white mb-6">Personalize</h3>
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-sm font-semibold text-gray-300 mb-3">Style</h4>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-gray-400 block mb-2">Font Size</label>
-                    <select className="w-full px-3 py-2 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white">
-                      <option>Small</option>
-                      <option selected>Medium</option>
-                      <option>Large</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-sm font-semibold text-gray-300 mb-3">Features</h4>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" defaultChecked className="w-4 h-4" />
-                    <span className="text-sm text-gray-300">Enable Streaming Responses</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" defaultChecked className="w-4 h-4" />
-                    <span className="text-sm text-gray-300">Show Markdown Formatting</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="w-4 h-4" />
-                    <span className="text-sm text-gray-300">Enable Sound Notifications</span>
-                  </label>
-                </div>
-              </div>
-              
-
-            </div>
-            
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowPersonalize(false)} className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition">
-                Cancel
-              </button>
-              <button onClick={() => setShowPersonalize(false)} className="flex-1 px-4 py-2 bg-white hover:bg-gray-200 text-black rounded-lg transition font-medium">
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Rename Modal */}
@@ -865,9 +821,9 @@ export default function SidebarChatGPT({
       )}
 
 
-      <div className={`${isMinimized ? 'w-16' : 'w-64'} bg-[#212121] h-screen flex flex-col transition-[width] duration-300 border-r border-[#3f3f3f]`}>
+      <div className={`${isMinimized ? 'w-16' : 'w-64'} bg-[#212121] h-screen overflow-y-auto transition-[width] duration-300 border-r border-[#3f3f3f]`}>
         {/* Header with Logo */}
-        <div className="p-4 border-b border-[#3f3f3f]">
+        <div className="p-4 border-b border-[#3f3f3f] sticky top-0 bg-[#212121] z-10">
           <div className="flex justify-center mb-3">
             <img
               src="https://i.ibb.co/fdtpDM1c/nminh-white-nobg.png"
@@ -923,7 +879,7 @@ export default function SidebarChatGPT({
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 py-2">
+        <div className="px-2 py-2">
           {!isMinimized && (
             <>
               {/* Archive toggle button */}
@@ -954,7 +910,7 @@ export default function SidebarChatGPT({
                         </svg>
                         PINNED
                       </div>
-                      {pinnedChats.map(chat => renderChatItem(chat))}
+                      {pinnedChats.map((chat, index) => renderChatItem(chat, index))}
                     </>
                   )}
 
@@ -962,7 +918,7 @@ export default function SidebarChatGPT({
                   {unpinnedChats.length > 0 && pinnedChats.length > 0 && (
                     <div className="text-xs text-gray-500 font-semibold px-3 py-2 mt-2">CHATS</div>
                   )}
-                  {unpinnedChats.map(chat => renderChatItem(chat))}
+                  {unpinnedChats.map((chat, index) => renderChatItem(chat, index))}
                 </>
               )}
             </>
