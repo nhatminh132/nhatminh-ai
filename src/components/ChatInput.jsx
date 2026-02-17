@@ -53,9 +53,9 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
   } : {
     air: { label: 'Air', description: 'Unlimited • 10K TPM', badge: 'FREE' },
     base: { label: 'Base', description: 'Unlimited • 10K TPM', badge: 'FREE' },
-    pro: { label: 'Pro', description: '3 req/min • 10/day', badge: 'PRO' },
-    'pro-max': { label: 'Pro Max', description: '2 req/min • 5/day', badge: 'PRO' },
-    ultra: { label: 'Ultra', description: '1 req/min • 3/day + Web Search', badge: 'ULTRA' }
+    pro: { label: 'Pro', description: `${proLiteUsesLeft}/50 left today • 10K TPM`, badge: 'PRO' },
+    'pro-max': { label: 'Pro Max', description: `${proMaxUsesLeft}/10 left today • 10K TPM`, badge: 'PRO' },
+    ultra: { label: 'Ultra', description: '3/3 left today + Web Search', badge: 'ULTRA' }
   }
 
   const currentMode = modeConfig[mode]
