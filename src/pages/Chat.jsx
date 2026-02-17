@@ -13,9 +13,9 @@ import RateLimitWarning from '../components/RateLimitWarning'
 
 // Token limits per mode (TPM = Tokens Per Minute)
 const TOKEN_LIMITS = {
-  air: 6000,    // Air mode: 6,000 TPM
-  base: 30000,  // Base mode: 30,000 TPM
-  pro: 30000    // Pro mode: 30,000 TPM
+  air: 10000,   // Air mode: 10,000 TPM
+  base: 10000,  // Base mode: 10,000 TPM
+  pro: 10000    // Pro mode: 10,000 TPM
 }
 
 export default function Chat({ user }) {

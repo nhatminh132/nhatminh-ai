@@ -120,6 +120,8 @@ export default function SidebarChatGPT({
   const [showFolderModal, setShowFolderModal] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [newFolderColor, setNewFolderColor] = useState('#3b82f6')
+  const [openMenuId, setOpenMenuId] = useState(null)
+  const [chatToDelete, setChatToDelete] = useState(null)
 
   useEffect(() => {
     fetchChats()
@@ -271,10 +273,7 @@ export default function SidebarChatGPT({
     }
   }
 
-  const handleDeleteChat = async (chatId, e) => {
-    e.stopPropagation()
-    if (!confirm('Delete this conversation? This cannot be undone.')) return
-    
+  const handleDeleteChat = async (chatId) => {
     try {
       const { error } = await supabase
         .from('conversations')
@@ -290,6 +289,8 @@ export default function SidebarChatGPT({
       if (currentChatId === chatId) {
         onNewChat()
       }
+      
+      setChatToDelete(null)
     } catch (error) {
       console.error('Error deleting chat:', error)
       alert('Failed to delete conversation. Please try again.')
@@ -362,46 +363,83 @@ export default function SidebarChatGPT({
         </div>
       </button>
       
-      {/* Action buttons on hover */}
-      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-        {/* Pin button */}
-        <button
-          onClick={(e) => handleTogglePin(chat.id, e)}
-          className="p-1.5 hover:bg-[#4a4a4a] rounded transition-colors"
-          title={chat.is_pinned ? "Unpin" : "Pin"}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className={`${chat.is_pinned ? 'text-yellow-500' : 'text-gray-400'} hover:text-white transition-colors`} viewBox="0 0 16 16">
-            <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
-          </svg>
-        </button>
-        
-        {/* Rename button */}
+      {/* Menu button */}
+      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={(e) => {
             e.stopPropagation()
-            setEditingChatId(chat.id)
-            setEditingTitle(chat.title)
+            setOpenMenuId(openMenuId === chat.id ? null : chat.id)
           }}
           className="p-1.5 hover:bg-[#4a4a4a] rounded transition-colors"
-          title="Rename"
+          title="More options"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="text-gray-400 hover:text-white transition-colors" viewBox="0 0 16 16">
-            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-          </svg>
-        </button>
-        
-        {/* Delete button */}
-        <button
-          onClick={(e) => handleDeleteChat(chat.id, e)}
-          className="p-1.5 hover:bg-red-600/20 rounded transition-colors"
-          title="Delete"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="text-gray-400 hover:text-red-400 transition-colors" viewBox="0 0 16 16">
-            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="text-gray-400 hover:text-white transition-colors" viewBox="0 0 16 16">
+            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
           </svg>
         </button>
       </div>
+
+      {/* Dropdown menu */}
+      {openMenuId === chat.id && (
+        <div 
+          className="absolute right-8 top-0 bg-[#2f2f2f] rounded-lg shadow-2xl border border-[#4a4a4a] py-1 z-50 min-w-[160px]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={(e) => {
+              handleTogglePin(chat.id, e)
+              setOpenMenuId(null)
+            }}
+            className="w-full text-left px-3 py-2 hover:bg-[#3f3f3f] text-white text-sm flex items-center gap-2 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
+            </svg>
+            {chat.is_pinned ? 'Unpin' : 'Pin'}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setEditingChatId(chat.id)
+              setEditingTitle(chat.title)
+              setOpenMenuId(null)
+            }}
+            className="w-full text-left px-3 py-2 hover:bg-[#3f3f3f] text-white text-sm flex items-center gap-2 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+            </svg>
+            Rename
+          </button>
+          <button
+            onClick={(e) => {
+              handleToggleArchive(chat.id, e)
+              setOpenMenuId(null)
+            }}
+            className="w-full text-left px-3 py-2 hover:bg-[#3f3f3f] text-white text-sm flex items-center gap-2 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5zm13-3H1v2h14zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+            </svg>
+            {chat.is_archived ? 'Unarchive' : 'Archive'}
+          </button>
+          <div className="border-t border-[#4a4a4a] my-1"></div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setChatToDelete(chat.id)
+              setOpenMenuId(null)
+            }}
+            className="w-full text-left px-3 py-2 hover:bg-red-600/20 text-red-400 text-sm flex items-center gap-2 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+              <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+            </svg>
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   )
 
@@ -447,15 +485,42 @@ export default function SidebarChatGPT({
 
   // Close context menu when clicking anywhere
   useEffect(() => {
-    const handleClick = () => setContextMenu(null)
-    if (contextMenu) {
+    const handleClick = () => {
+      setContextMenu(null)
+      setOpenMenuId(null)
+    }
+    if (contextMenu || openMenuId) {
       document.addEventListener('click', handleClick)
       return () => document.removeEventListener('click', handleClick)
     }
-  }, [contextMenu])
+  }, [contextMenu, openMenuId])
 
   return (
     <>
+      {/* Delete Confirmation Modal */}
+      {chatToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => setChatToDelete(null)}>
+          <div className="bg-[#2f2f2f] rounded-lg p-6 max-w-md w-full border border-[#4a4a4a] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-white mb-2">Delete Conversation?</h3>
+            <p className="text-sm text-gray-400 mb-6">This will delete "{chats.find(c => c.id === chatToDelete)?.title}". This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setChatToDelete(null)}
+                className="flex-1 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteChat(chatToDelete)}
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Context Menu */}
       {contextMenu && (
         <div 
