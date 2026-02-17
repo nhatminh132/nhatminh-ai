@@ -278,7 +278,25 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
             </div>
           )}
 
-Tool call argument 'replace' pruned from message history.
+          {/* Token Usage RGB Bar */}
+          {!isGuest && tokenUsage > 0 && (
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <span className="text-xs text-gray-500">Limit:</span>
+              <div className="w-24 h-2 rounded-full overflow-hidden bg-gray-700">
+                <div 
+                  className="h-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min((tokenUsage / tokenLimit) * 100, 100)}%`,
+                    background: tokenUsage / tokenLimit > 0.9 
+                      ? 'linear-gradient(90deg, #ef4444, #dc2626)' 
+                      : tokenUsage / tokenLimit > 0.7 
+                        ? 'linear-gradient(90deg, #eab308, #ca8a04)'
+                        : 'linear-gradient(90deg, #22c55e, #16a34a, #3b82f6)'
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
 
           {/* AI Warning Text & Made By */}
           <div className="mt-2 text-xs text-gray-500 text-center flex flex-col gap-1">
