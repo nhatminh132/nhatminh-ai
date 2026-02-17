@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
-export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, disabled, mode, onModeChange, proMaxUsesLeft, proLiteUsesLeft, isGuest = false, guestAirUsesLeft = 10, guestBaseUsesLeft = 10 }) {
+export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, disabled, mode, onModeChange, proMaxUsesLeft, proLiteUsesLeft, isGuest = false, guestAirUsesLeft = 10, guestBaseUsesLeft = 10, tokenUsage = 0, tokenLimit = 30000 }) {
   const [message, setMessage] = useState('')
   const [rows, setRows] = useState(1)
   const [showModeMenu, setShowModeMenu] = useState(false)
@@ -264,6 +264,30 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
             <div className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
               <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
               Recording... {formatDuration(recordingDuration)}
+            </div>
+          )}
+
+          {/* Token Usage Indicator */}
+          {tokenLimit && (
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <div className="flex-1 max-w-xs">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Token Usage (per minute)</span>
+                  <span className={tokenUsage / tokenLimit > 0.8 ? 'text-yellow-500 font-semibold' : ''}>
+                    {tokenUsage.toLocaleString()} / {tokenLimit.toLocaleString()}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-1.5">
+                  <div 
+                    className={`h-1.5 rounded-full transition-all ${
+                      tokenUsage / tokenLimit > 0.9 ? 'bg-red-500' :
+                      tokenUsage / tokenLimit > 0.7 ? 'bg-yellow-500' :
+                      'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min((tokenUsage / tokenLimit) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
             </div>
           )}
 

@@ -77,6 +77,55 @@ export default function SettingsModal({ onClose }) {
               </label>
             </div>
           </div>
+
+          {/* Token Limits Info */}
+          <div>
+            <h4 className="text-lg font-semibold text-white mb-3">Token Limits (TPM)</h4>
+            <div className="bg-[#212121] rounded-lg p-4 border border-[#4a4a4a] space-y-3">
+              <p className="text-xs text-gray-400 mb-3">
+                TPM = Tokens Per Minute. Rate limits are enforced by the API provider to ensure fair usage.
+              </p>
+              
+              {/* Air Mode */}
+              <div className="flex items-center justify-between p-2 bg-[#2a2a2a] rounded">
+                <div>
+                  <div className="text-sm font-medium text-blue-400">Air Mode</div>
+                  <div className="text-xs text-gray-500">Lightweight models</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-mono text-white">6,000 TPM</div>
+                </div>
+              </div>
+
+              {/* Base Mode */}
+              <div className="flex items-center justify-between p-2 bg-[#2a2a2a] rounded">
+                <div>
+                  <div className="text-sm font-medium text-green-400">Base Mode</div>
+                  <div className="text-xs text-gray-500">Balanced models</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-mono text-white">30,000 TPM</div>
+                </div>
+              </div>
+
+              {/* Pro Mode */}
+              <div className="flex items-center justify-between p-2 bg-[#2a2a2a] rounded">
+                <div>
+                  <div className="text-sm font-medium text-purple-400">Pro Mode</div>
+                  <div className="text-xs text-gray-500">Advanced models</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-mono text-white">30,000 TPM</div>
+                </div>
+              </div>
+
+              <div className="mt-3 p-3 bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded">
+                <p className="text-xs text-gray-300">
+                  💡 <strong>Tip:</strong> If you hit a rate limit, wait ~1 minute or switch to a different mode to continue chatting.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-3 mt-6">

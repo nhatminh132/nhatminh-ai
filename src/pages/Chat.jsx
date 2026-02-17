@@ -9,6 +9,14 @@ import Gallery from '../components/Gallery'
 import LoginPopup from '../components/LoginPopup'
 import AISafetyModal from '../components/AISafetyModal'
 import KeyboardShortcutsHelp from '../components/KeyboardShortcutsHelp'
+import RateLimitWarning from '../components/RateLimitWarning'
+
+// Token limits per mode (TPM = Tokens Per Minute)
+const TOKEN_LIMITS = {
+  air: 6000,    // Air mode: 6,000 TPM
+  base: 30000,  // Base mode: 30,000 TPM
+  pro: 30000    // Pro mode: 30,000 TPM
+}
 
 export default function Chat({ user }) {
   const [messages, setMessages] = useState([])
@@ -28,6 +36,10 @@ export default function Chat({ user }) {
   const [guestAirUsesLeft, setGuestAirUsesLeft] = useState(10)
   const [guestBaseUsesLeft, setGuestBaseUsesLeft] = useState(10)
   const [showAISafety, setShowAISafety] = useState(false)
+  const [showRateLimitWarning, setShowRateLimitWarning] = useState(false)
+  const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState(null)
+  const [tokenUsageThisMinute, setTokenUsageThisMinute] = useState(0)
+  const [lastTokenResetTime, setLastTokenResetTime] = useState(Date.now())
   const [showShortcuts, setShowShortcuts] = useState(false)
   const messagesEndRef = useRef(null)
   const isGuest = !user
@@ -365,6 +377,27 @@ export default function Chat({ user }) {
   const handleSendMessage = async (message, isEdit = false, editIndex = null) => {
     if (loading) return
 
+    // Check token usage and reset if needed (every minute)
+    const now = Date.now()
+    const timeSinceReset = now - lastTokenResetTime
+    if (timeSinceReset > 60000) {
+      // Reset token counter every minute
+      setTokenUsageThisMinute(0)
+      setLastTokenResetTime(now)
+    }
+
+    // Estimate tokens for this request (rough: ~4 chars per token)
+    const estimatedTokens = Math.ceil(message.length / 4) + Math.ceil(messages.reduce((sum, m) => sum + m.text.length, 0) / 4)
+    
+    // Check if we're approaching the rate limit
+    const limit = TOKEN_LIMITS[mode]
+    if (tokenUsageThisMinute + estimatedTokens > limit) {
+      const timeUntilReset = Math.ceil((60000 - timeSinceReset) / 1000)
+      setRateLimitRetryAfter(`${timeUntilReset}s`)
+      setShowRateLimitWarning(true)
+      return
+    }
+
     // Show login popup for guest users
     if (isGuest) {
       setShowLoginPopup(true)
@@ -412,6 +445,11 @@ export default function Chat({ user }) {
 
       const { text, model, tokenCount, latencyMs } = result
       responseMetadata = { tokenCount, latencyMs }
+
+      // Update token usage tracking
+      if (tokenCount) {
+        setTokenUsageThisMinute(prev => prev + tokenCount)
+      }
 
       // Update with final response and model - mark streaming as complete
       setMessages(prev => {
@@ -622,6 +660,15 @@ export default function Chat({ user }) {
         />
       )}
 
+      {/* Rate Limit Warning */}
+      {showRateLimitWarning && (
+        <RateLimitWarning 
+          onClose={() => setShowRateLimitWarning(false)}
+          mode={mode}
+          retryAfter={rateLimitRetryAfter}
+        />
+      )}
+
       {/* Login Popup for Guests */}
       {showLoginPopup && (
         <LoginPopup onClose={() => setShowLoginPopup(false)} />
@@ -692,6 +739,8 @@ export default function Chat({ user }) {
                 isGuest={isGuest}
                 guestAirUsesLeft={guestAirUsesLeft}
                 guestBaseUsesLeft={guestBaseUsesLeft}
+                tokenUsage={tokenUsageThisMinute}
+                tokenLimit={TOKEN_LIMITS[mode]}
               />
             </div>
           </div>
@@ -731,6 +780,8 @@ export default function Chat({ user }) {
               isGuest={isGuest}
               guestAirUsesLeft={guestAirUsesLeft}
               guestBaseUsesLeft={guestBaseUsesLeft}
+              tokenUsage={tokenUsageThisMinute}
+              tokenLimit={TOKEN_LIMITS[mode]}
             />
           </>
         )}
