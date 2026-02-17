@@ -843,8 +843,8 @@ export default function SidebarChatGPT({
 
 
       <div className={`${isMinimized ? 'w-16' : 'w-64'} bg-[#212121] h-screen flex flex-col transition-[width] duration-300 border-r border-[#3f3f3f]`}>
-        {/* Header with Logo */}
-        <div className="p-4 border-b border-[#3f3f3f]">
+        {/* Header with Logo - Fixed */}
+        <div className="p-4 border-b border-[#3f3f3f] flex-shrink-0">
           <div className="flex justify-center mb-3">
             <img
               src="https://i.ibb.co/fdtpDM1c/nminh-white-nobg.png"
@@ -852,6 +852,10 @@ export default function SidebarChatGPT({
               className="h-8 w-8 object-contain"
             />
           </div>
+        </div>
+        
+        {/* Scrollable Buttons Section */}
+        <div className="flex-shrink-0 overflow-y-auto max-h-80 px-4 py-2 border-b border-[#3f3f3f]">
           <div className="flex flex-col gap-2">
             <button onClick={onNewChat} className={`w-full hover:bg-[#2f2f2f] text-white px-3 py-2.5 rounded-lg transition flex items-center ${isMinimized ? 'justify-center' : 'gap-3'}`} title="New Chat">
               <svg xmlns="http://www.w3.org/2000/svg" className={`${isMinimized ? 'w-6 h-6' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 16 16">
@@ -900,6 +904,8 @@ export default function SidebarChatGPT({
             </button>
           </div>
         </div>
+        
+        {/* Scrollable Chat List Section */}
         <div className="flex-1 overflow-y-auto px-2 py-2">
           {!isMinimized && (
             <>
