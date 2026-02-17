@@ -735,6 +735,7 @@ export default function Chat({ user }) {
           isGuest={isGuest}
           onGenerateSummary={handleGenerateSummary}
           hasMessages={messages.length > 0}
+          onShowLogin={() => setShowLoginPopup(true)}
         />
         
         {messages.length === 0 ? (

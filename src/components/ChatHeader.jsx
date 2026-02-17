@@ -1,19 +1,6 @@
 import React from 'react'
-import { supabase } from '../lib/supabaseClient'
 
-export default function ChatHeader({ onToggleSidebar, sidebarMinimized, isTemporaryChat, onToggleTemporaryChat, isGuest = false, onGenerateSummary, hasMessages = false }) {
-  const handleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      }
-    })
-    if (error) {
-      console.error('Login error:', error)
-      alert('Login failed: ' + error.message)
-    }
-  }
+export default function ChatHeader({ onToggleSidebar, sidebarMinimized, isTemporaryChat, onToggleTemporaryChat, isGuest = false, onGenerateSummary, hasMessages = false, onShowLogin }) {
 
   return (
     <header className="bg-[#212121] border-b border-[#3f3f3f] p-4">
@@ -38,13 +25,13 @@ export default function ChatHeader({ onToggleSidebar, sidebarMinimized, isTempor
           {isGuest && (
             <div className="flex items-center gap-2 ml-4">
               <button
-                onClick={handleLogin}
+                onClick={onShowLogin}
                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors text-sm"
               >
                 Sign In
               </button>
               <button
-                onClick={handleLogin}
+                onClick={onShowLogin}
                 className="px-4 py-2 rounded-lg bg-white hover:bg-gray-100 text-gray-900 font-medium transition-colors text-sm"
               >
                 Sign Up
