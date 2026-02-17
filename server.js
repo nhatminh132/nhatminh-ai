@@ -68,13 +68,27 @@ app.post('/api/groq', async (req, res) => {
     // Add current message
     messages.push({ role: 'user', content: message })
 
-    const stream = await groq.chat.completions.create({
+    // Enable web search for compound models
+    const isCompoundModel = model && (model.includes('compound') || model.includes('groq/compound'))
+    
+    const completionOptions = {
       messages,
       model: model || 'llama-3.1-8b-instant',
       stream: true,
       temperature: 0.7,
       max_tokens: maxTokens
-    })
+    }
+
+    // Add compound tools for web search, code interpreter, visit website
+    if (isCompoundModel) {
+      completionOptions.compound_custom = {
+        tools: {
+          enabled_tools: ['web_search', 'code_interpreter', 'visit_website']
+        }
+      }
+    }
+
+    const stream = await groq.chat.completions.create(completionOptions)
 
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
