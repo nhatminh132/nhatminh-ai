@@ -10,7 +10,8 @@ export async function streamGroq({
   model,
   onChunk = () => {},
   fallbackModels = DEFAULT_FALLBACK_MODELS,
-  conversationHistory = []
+  conversationHistory = [],
+  maxTokens = 4096
 }) {
   const modelsToTry = model ? [model, ...fallbackModels] : fallbackModels
   let lastError = null
@@ -31,7 +32,8 @@ export async function streamGroq({
           message,
           model: currentModel,
           systemPrompt,
-          conversationHistory
+          conversationHistory,
+          maxTokens
         })
       })
 

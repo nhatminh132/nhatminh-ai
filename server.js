@@ -40,7 +40,7 @@ app.post('/api/whisper', async (req, res) => {
 })
 
 app.post('/api/groq', async (req, res) => {
-  const { message, model, systemPrompt, conversationHistory } = req.body
+  const { message, model, systemPrompt, conversationHistory, maxTokens = 4096 } = req.body
 
   if (!message) {
     return res.status(400).json({ error: 'Message is required' })
@@ -73,7 +73,7 @@ app.post('/api/groq', async (req, res) => {
       model: model || 'llama-3.1-8b-instant',
       stream: true,
       temperature: 0.7,
-      max_tokens: 2048
+      max_tokens: maxTokens
     })
 
     res.setHeader('Content-Type', 'text/event-stream')

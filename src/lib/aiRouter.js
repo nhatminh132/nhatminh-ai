@@ -216,35 +216,45 @@ const MODEL_CONFIG = {
     label: 'Llama 3.1 8B', 
     displayName: "Meta's Llama 3.1",
     dailyLimit: null, 
-    perMinLimit: null 
+    perMinLimit: 20,
+    maxTokens: 2048,
+    tpm: 10000
   },
   'base': { 
     model: 'openai/gpt-oss-20b', 
     label: 'OpenAI GPT 20B', 
     displayName: "OpenAI's GPT",
     dailyLimit: null, 
-    perMinLimit: null 
+    perMinLimit: 15,
+    maxTokens: 4096,
+    tpm: 10000
   },
   'pro': { 
     model: 'openai/gpt-oss-120b', 
     label: 'OpenAI GPT 120B', 
     displayName: "OpenAI's GPT Pro",
     dailyLimit: 200, 
-    perMinLimit: 10 
+    perMinLimit: 10,
+    maxTokens: 8192,
+    tpm: 10000
   },
   'pro-max': { 
     model: 'moonshotai/kimi-k2-instruct', 
     label: 'Kimi K2', 
     displayName: "Moonshot's Kimi K2",
     dailyLimit: 100, 
-    perMinLimit: 50 
+    perMinLimit: 50,
+    maxTokens: 16384,
+    tpm: 10000
   },
   'ultra': { 
     model: 'groq/compound', 
     label: 'Groq Compound', 
     displayName: "Groq's Compound AI",
     dailyLimit: 25, 
-    perMinLimit: null 
+    perMinLimit: 5,
+    maxTokens: 32768,
+    tpm: 10000
   }
 }
 
@@ -274,7 +284,8 @@ export async function routeAIRequest(message, onChunk = null, mode = 'base', con
       systemPrompt,
       model: config.model,
       onChunk: onChunk || (() => {}),
-      conversationHistory
+      conversationHistory,
+      maxTokens: config.maxTokens
     })
     console.log('✅ Groq succeeded!')
     return { text: result.text, model: config.displayName }
