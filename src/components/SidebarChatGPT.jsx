@@ -113,6 +113,7 @@ export default function SidebarChatGPT({
   const [showBookmarks, setShowBookmarks] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
   const [showFlashcards, setShowFlashcards] = useState(false)
+  const [contextMenu, setContextMenu] = useState(null)
 
   useEffect(() => {
     fetchChats()
@@ -216,29 +217,39 @@ export default function SidebarChatGPT({
   }
 
   const handleRenameChat = async (chatId, newTitle) => {
-    if (!newTitle.trim()) return
+    if (!newTitle.trim()) {
+      alert('Please enter a valid title')
+      return
+    }
+    
+    if (newTitle.trim().length > 100) {
+      alert('Title is too long (max 100 characters)')
+      return
+    }
     
     try {
+      const trimmedTitle = newTitle.trim()
       const { error } = await supabase
         .from('conversations')
-        .update({ title: newTitle })
+        .update({ title: trimmedTitle })
         .eq('id', chatId)
 
       if (error) throw error
 
       setChats(prev => prev.map(chat => 
-        chat.id === chatId ? { ...chat, title: newTitle } : chat
+        chat.id === chatId ? { ...chat, title: trimmedTitle } : chat
       ))
       setEditingChatId(null)
       setEditingTitle('')
     } catch (error) {
       console.error('Error renaming chat:', error)
+      alert('Failed to rename conversation. Please try again.')
     }
   }
 
   const handleDeleteChat = async (chatId, e) => {
     e.stopPropagation()
-    if (!confirm('Delete this conversation?')) return
+    if (!confirm('Delete this conversation? This cannot be undone.')) return
     
     try {
       const { error } = await supabase
@@ -247,9 +258,17 @@ export default function SidebarChatGPT({
         .eq('id', chatId)
 
       if (error) throw error
+      
+      // Remove from local state
       setChats(prev => prev.filter(chat => chat.id !== chatId))
+      
+      // If we deleted the current chat, start a new one
+      if (currentChatId === chatId) {
+        onNewChat()
+      }
     } catch (error) {
       console.error('Error deleting chat:', error)
+      alert('Failed to delete conversation. Please try again.')
     }
   }
 
@@ -286,8 +305,57 @@ export default function SidebarChatGPT({
     window.location.href = '/login'
   }
 
+  // Close context menu when clicking anywhere
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null)
+    if (contextMenu) {
+      document.addEventListener('click', handleClick)
+      return () => document.removeEventListener('click', handleClick)
+    }
+  }, [contextMenu])
+
   return (
     <>
+      {/* Context Menu */}
+      {contextMenu && (
+        <div 
+          className="fixed bg-[#2f2f2f] rounded-lg shadow-2xl border border-[#4a4a4a] py-2 z-50 min-w-[180px]"
+          style={{ 
+            left: `${contextMenu.x}px`, 
+            top: `${contextMenu.y}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              setEditingChatId(contextMenu.chatId)
+              setEditingTitle(contextMenu.chatTitle)
+              setContextMenu(null)
+            }}
+            className="w-full text-left px-4 py-2 hover:bg-[#3f3f3f] text-white text-sm flex items-center gap-3 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+            </svg>
+            Rename
+          </button>
+          <div className="border-t border-[#4a4a4a] my-1"></div>
+          <button
+            onClick={(e) => {
+              handleDeleteChat(contextMenu.chatId, e)
+              setContextMenu(null)
+            }}
+            className="w-full text-left px-4 py-2 hover:bg-red-600/20 text-red-400 text-sm flex items-center gap-3 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+              <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+            </svg>
+            Delete
+          </button>
+        </div>
+      )}
+
       {/* Flashcards Panel */}
       {showFlashcards && <FlashcardsPanel userId={userId} onClose={() => setShowFlashcards(false)} />}
 
@@ -358,30 +426,39 @@ export default function SidebarChatGPT({
 
       {/* Rename Modal */}
       {editingChatId && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#2f2f2f] rounded-lg p-6 max-w-md w-full border border-[#4a4a4a]">
-            <h3 className="text-xl font-bold text-white mb-4">Rename Chat</h3>
-            <input
-              type="text"
-              value={editingTitle}
-              onChange={(e) => setEditingTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleRenameChat(editingChatId, editingTitle)
-                if (e.key === 'Escape') { setEditingChatId(null); setEditingTitle('') }
-              }}
-              className="w-full px-4 py-2 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white mb-4 focus:ring-2 focus:ring-blue-500"
-              autoFocus
-            />
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onClick={() => { setEditingChatId(null); setEditingTitle('') }}>
+          <div className="bg-[#2f2f2f] rounded-lg p-6 max-w-md w-full border border-[#4a4a4a] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-white mb-2">Rename Conversation</h3>
+            <p className="text-sm text-gray-400 mb-4">Give this conversation a memorable name</p>
+            <div className="relative">
+              <input
+                type="text"
+                value={editingTitle}
+                onChange={(e) => setEditingTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRenameChat(editingChatId, editingTitle)
+                  if (e.key === 'Escape') { setEditingChatId(null); setEditingTitle('') }
+                }}
+                maxLength={100}
+                className="w-full px-4 py-3 bg-[#212121] border border-[#4a4a4a] rounded-lg text-white mb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition"
+                placeholder="Enter conversation title..."
+                autoFocus
+              />
+              <div className="text-xs text-gray-500 mb-4 text-right">
+                {editingTitle.length}/100
+              </div>
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={() => { setEditingChatId(null); setEditingTitle('') }}
-                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition"
+                className="flex-1 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleRenameChat(editingChatId, editingTitle)}
-                className="flex-1 px-4 py-2 bg-white hover:bg-gray-200 text-black rounded-lg transition font-medium"
+                disabled={!editingTitle.trim()}
+                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition font-medium"
               >
                 Save
               </button>
@@ -613,9 +690,48 @@ export default function SidebarChatGPT({
                 <div className="text-center text-gray-500 mt-4 text-sm">No chats yet</div>
               ) : (
                 filteredChats.map(chat => (
-                  <button key={chat.id} onClick={() => onSelectChat(chat)} className={`w-full text-left px-3 py-2 rounded-lg mb-1 transition ${currentChatId === chat.id ? 'bg-[#3f3f3f]' : 'hover:bg-[#2f2f2f]'}`}>
-                    <div className="text-sm text-white truncate">{chat.title}</div>
-                  </button>
+                  <div 
+                    key={chat.id} 
+                    className={`relative group rounded-lg mb-1 transition ${currentChatId === chat.id ? 'bg-[#3f3f3f]' : 'hover:bg-[#2f2f2f]'}`}
+                    onContextMenu={(e) => {
+                      e.preventDefault()
+                      setContextMenu({ chatId: chat.id, chatTitle: chat.title, x: e.clientX, y: e.clientY })
+                    }}
+                  >
+                    <button onClick={() => onSelectChat(chat)} className="w-full text-left px-3 py-2">
+                      <div className="text-sm text-white truncate pr-16">{chat.title}</div>
+                    </button>
+                    
+                    {/* Action buttons on hover */}
+                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+                      {/* Rename button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingChatId(chat.id)
+                          setEditingTitle(chat.title)
+                        }}
+                        className="p-1.5 hover:bg-[#4a4a4a] rounded transition-colors"
+                        title="Rename (Click or press R)"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="text-gray-400 hover:text-white transition-colors" viewBox="0 0 16 16">
+                          <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                        </svg>
+                      </button>
+                      
+                      {/* Delete button */}
+                      <button
+                        onClick={(e) => handleDeleteChat(chat.id, e)}
+                        className="p-1.5 hover:bg-red-600/20 rounded transition-colors"
+                        title="Delete (Click or press Delete)"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" className="text-gray-400 hover:text-red-400 transition-colors" viewBox="0 0 16 16">
+                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                          <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 ))
               )}
             </>
