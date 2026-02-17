@@ -217,7 +217,7 @@ const MODEL_CONFIG = {
     displayName: "Meta's Llama 3.1",
     dailyLimit: null, 
     perMinLimit: 20,
-    maxTokens: 2048,
+    maxTokens: 6144,  // 2048 x 3
     tpm: 10000
   },
   'base': { 
@@ -226,7 +226,7 @@ const MODEL_CONFIG = {
     displayName: "OpenAI's GPT",
     dailyLimit: null, 
     perMinLimit: 15,
-    maxTokens: 4096,
+    maxTokens: 12288,  // 4096 x 3
     tpm: 10000
   },
   'pro': { 
@@ -235,7 +235,7 @@ const MODEL_CONFIG = {
     displayName: "OpenAI's GPT Pro",
     dailyLimit: 200, 
     perMinLimit: 10,
-    maxTokens: 8192,
+    maxTokens: 16384,  // 8192 x 2
     tpm: 10000
   },
   'pro-max': { 
@@ -244,7 +244,7 @@ const MODEL_CONFIG = {
     displayName: "Moonshot's Kimi K2",
     dailyLimit: 100, 
     perMinLimit: 50,
-    maxTokens: 16384,
+    maxTokens: 32768,  // 16384 x 2
     tpm: 10000
   },
   'ultra': { 
@@ -253,7 +253,7 @@ const MODEL_CONFIG = {
     displayName: "Groq's Compound AI",
     dailyLimit: 25, 
     perMinLimit: 5,
-    maxTokens: 32768,
+    maxTokens: 65536,  // 32768 x 2
     tpm: 10000
   }
 }

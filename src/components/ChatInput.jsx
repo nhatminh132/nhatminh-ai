@@ -51,11 +51,11 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
     air: { label: 'Air', description: `Quick responses (${guestAirUsesLeft}/10 uses left)`, disabled: guestAirUsesLeft <= 0 },
     base: { label: 'Base', description: `Standard model (${guestBaseUsesLeft}/10 uses left)`, disabled: guestBaseUsesLeft <= 0 }
   } : {
-    air: { label: 'Air', description: '2K tokens • 20 req/min • 10K TPM', badge: 'FREE' },
-    base: { label: 'Base', description: '4K tokens • 15 req/min • 10K TPM', badge: 'FREE' },
-    pro: { label: 'Pro', description: '8K tokens • 10 req/min • 200/day', badge: 'PRO' },
-    'pro-max': { label: 'Pro Max', description: '16K tokens • 50 req/min • 100/day', badge: 'PRO' },
-    ultra: { label: 'Ultra', description: '32K tokens • 5 req/min • 25/day', badge: 'ULTRA' }
+    air: { label: 'Air', description: '6K tokens • 20 req/min • 10K TPM', badge: 'FREE' },
+    base: { label: 'Base', description: '12K tokens • 15 req/min • 10K TPM', badge: 'FREE' },
+    pro: { label: 'Pro', description: '16K tokens • 10 req/min • 200/day', badge: 'PRO' },
+    'pro-max': { label: 'Pro Max', description: '32K tokens • 50 req/min • 100/day', badge: 'PRO' },
+    ultra: { label: 'Ultra', description: '64K tokens • 5 req/min • 25/day', badge: 'ULTRA' }
   }
 
   const currentMode = modeConfig[mode]
