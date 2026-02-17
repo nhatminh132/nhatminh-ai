@@ -51,11 +51,11 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
     air: { label: 'Air', description: `Quick responses (${guestAirUsesLeft}/10 uses left)`, disabled: guestAirUsesLeft <= 0 },
     base: { label: 'Base', description: `Standard model (${guestBaseUsesLeft}/10 uses left)`, disabled: guestBaseUsesLeft <= 0 }
   } : {
-    air: { label: 'Air', description: 'Quick responses (No limit)' },
-    base: { label: 'Base', description: 'Standard model (No limit)' },
-    pro: { label: 'Pro', description: 'Advanced model (No limit)' },
-    'pro-max': { label: 'Pro Max', description: 'Premium model (No limit)' },
-    ultra: { label: 'Ultra', description: 'Best model (No limit)' }
+    air: { label: 'Air', description: '2K tokens • 20 req/min • 10K TPM', badge: 'FREE' },
+    base: { label: 'Base', description: '4K tokens • 15 req/min • 10K TPM', badge: 'FREE' },
+    pro: { label: 'Pro', description: '8K tokens • 10 req/min • 200/day', badge: 'PRO' },
+    'pro-max': { label: 'Pro Max', description: '16K tokens • 50 req/min • 100/day', badge: 'PRO' },
+    ultra: { label: 'Ultra', description: '32K tokens • 5 req/min • 25/day', badge: 'ULTRA' }
   }
 
   const currentMode = modeConfig[mode]
@@ -204,7 +204,18 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
                       disabled={disabled || config.disabled}
                     >
                       <div className="flex-1">
-                        <div className="font-medium text-white">{config.label}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white">{config.label}</span>
+                          {config.badge && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                              config.badge === 'FREE' ? 'bg-green-600 text-white' :
+                              config.badge === 'PRO' ? 'bg-blue-600 text-white' :
+                              'bg-purple-600 text-white'
+                            }`}>
+                              {config.badge}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-400 mt-0.5">{config.description}</div>
                       </div>
                       {mode === key && (

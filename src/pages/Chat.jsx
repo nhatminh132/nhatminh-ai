@@ -21,7 +21,7 @@ const TOKEN_LIMITS = {
 export default function Chat({ user }) {
   const [messages, setMessages] = useState([])
   const [uploadsLeft, setUploadsLeft] = useState(5)
-  const [mode, setMode] = useState('base')
+  const [mode, setMode] = useState('air')
   const [proMaxUsesLeft, setProMaxUsesLeft] = useState(10)
   const [proLiteUsesLeft, setProLiteUsesLeft] = useState(50)
   const [loading, setLoading] = useState(false)
