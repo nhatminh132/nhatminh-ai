@@ -844,7 +844,7 @@ export default function SidebarChatGPT({
 
       <div className={`${isMinimized ? 'w-16' : 'w-64'} bg-[#212121] h-screen overflow-y-auto transition-[width] duration-300 border-r border-[#3f3f3f]`}>
         {/* Header with Logo */}
-        <div className="p-4 border-b border-[#3f3f3f] sticky top-0 bg-[#212121] z-10">
+        <div className="p-4 border-b border-[#3f3f3f]">
           <div className="flex justify-center mb-3">
             <img
               src="https://i.ibb.co/fdtpDM1c/nminh-white-nobg.png"
