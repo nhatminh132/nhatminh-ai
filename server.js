@@ -11,6 +11,34 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY
 })
 
+// Whisper endpoint for speech-to-text
+app.post('/api/whisper', async (req, res) => {
+  try {
+    const { audio } = req.body
+    
+    if (!audio) {
+      return res.status(400).json({ error: 'No audio provided' })
+    }
+
+    // Convert base64 to buffer
+    const audioBuffer = Buffer.from(audio, 'base64')
+    
+    // Create a blob-like object for Groq API
+    const audioFile = new File([audioBuffer], 'audio.webm', { type: 'audio/webm' })
+
+    const transcription = await groq.audio.transcriptions.create({
+      file: audioFile,
+      model: 'whisper-large-v3-turbo',
+      response_format: 'json'
+    })
+
+    res.json({ text: transcription.text })
+  } catch (error) {
+    console.error('Whisper error:', error)
+    res.status(500).json({ error: 'Transcription failed', details: error.message })
+  }
+})
+
 app.post('/api/groq', async (req, res) => {
   const { message, model, systemPrompt, conversationHistory } = req.body
 

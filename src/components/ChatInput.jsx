@@ -76,7 +76,7 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
         try {
           const formData = new FormData()
           formData.append('file', audioBlob, 'recording.webm')
-          formData.append('model', 'whisper-large-v3')
+          formData.append('model', 'whisper-large-v3-turbo')
           formData.append('language', 'en')
           formData.append('response_format', 'json')
 

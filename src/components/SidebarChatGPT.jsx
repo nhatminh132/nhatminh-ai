@@ -122,6 +122,9 @@ export default function SidebarChatGPT({
   const [newFolderColor, setNewFolderColor] = useState('#3b82f6')
   const [openMenuId, setOpenMenuId] = useState(null)
   const [chatToDelete, setChatToDelete] = useState(null)
+  const [personality, setPersonality] = useState(() => {
+    return localStorage.getItem('aiPersonality') || 'default'
+  })
 
   useEffect(() => {
     fetchChats()
@@ -598,7 +601,17 @@ export default function SidebarChatGPT({
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
       {/* Settings Modal */}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <SettingsModal 
+          onClose={() => setShowSettings(false)} 
+          personality={personality}
+          onPersonalityChange={(newPersonality) => {
+            setPersonality(newPersonality)
+            localStorage.setItem('aiPersonality', newPersonality)
+            window.dispatchEvent(new CustomEvent('personalityChanged', { detail: newPersonality }))
+          }}
+        />
+      )}
 
       {/* Personalize Modal */}
       {showPersonalize && (

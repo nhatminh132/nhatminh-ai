@@ -40,6 +40,18 @@ export default function Chat({ user }) {
   const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState(null)
   const [tokenUsageThisMinute, setTokenUsageThisMinute] = useState(0)
   const [lastTokenResetTime, setLastTokenResetTime] = useState(Date.now())
+  const [personality, setPersonality] = useState(() => {
+    return localStorage.getItem('aiPersonality') || 'default'
+  })
+
+  // Listen for personality changes from settings
+  useEffect(() => {
+    const handlePersonalityChange = (e) => {
+      setPersonality(e.detail)
+    }
+    window.addEventListener('personalityChanged', handlePersonalityChange)
+    return () => window.removeEventListener('personalityChanged', handlePersonalityChange)
+  }, [])
   const [showShortcuts, setShowShortcuts] = useState(false)
   const messagesEndRef = useRef(null)
   const isGuest = !user
@@ -441,7 +453,7 @@ export default function Chat({ user }) {
           }
           return newMessages
         })
-      }, mode, messages)
+      }, mode, messages, personality)
 
       const { text, model, tokenCount, latencyMs } = result
       responseMetadata = { tokenCount, latencyMs }
@@ -625,6 +637,22 @@ export default function Chat({ user }) {
     } catch (error) {
       console.error('Error generating summary:', error)
       alert('Failed to generate summary. Please try again.')
+    }
+  }
+
+  const handlePersonalityChange = (newPersonality) => {
+    setPersonality(newPersonality)
+    localStorage.setItem('aiPersonality', newPersonality)
+    
+    // Update in database for logged-in users
+    if (!isGuest && user?.id) {
+      supabase
+        .from('profiles')
+        .update({ ai_personality: newPersonality })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.error('Error saving personality:', error)
+        })
     }
   }
 
