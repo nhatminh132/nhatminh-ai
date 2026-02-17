@@ -278,7 +278,7 @@ export async function routeAIRequest(message, onChunk = null, mode = 'base', con
       maxTokens: config.maxTokens
     })
     console.log('✅ Groq succeeded!')
-    return { text: result.text, model: config.displayName }
+    return { text: result.text, model: config.displayName, tokenCount: result.tokenCount, latencyMs: result.latencyMs }
   } catch (error) {
     groqError = error
     console.warn(`❌ Groq ${config.label} failed:`, groqError.message)
