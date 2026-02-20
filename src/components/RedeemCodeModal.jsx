@@ -21,7 +21,7 @@ export default function RedeemCodeModal({ onClose, userId }) {
       
       // Check if code is BETA and within valid date range
       if (upperCode === 'BETA') {
-        const validFrom = new Date('2026-02-22')
+        const validFrom = new Date('2026-02-16')
         const validUntil = new Date('2026-03-20')
         
         if (now < validFrom || now > validUntil) {
