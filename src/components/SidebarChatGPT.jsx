@@ -854,9 +854,11 @@ export default function SidebarChatGPT({
           </div>
         </div>
         
-        {/* Scrollable Buttons Section */}
-        <div className="flex-shrink-0 overflow-y-auto max-h-80 px-4 py-2 border-b border-[#3f3f3f]">
-          <div className="flex flex-col gap-2">
+        {/* Scrollable Content Section (Buttons + Chats) */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Buttons Section */}
+          <div className="px-4 py-2 border-b border-[#3f3f3f]">
+            <div className="flex flex-col gap-2">
             <button onClick={onNewChat} className={`w-full hover:bg-[#2f2f2f] text-white px-3 py-2.5 rounded-lg transition flex items-center ${isMinimized ? 'justify-center' : 'gap-3'}`} title="New Chat">
               <svg xmlns="http://www.w3.org/2000/svg" className={`${isMinimized ? 'w-6 h-6' : 'w-5 h-5'}`} fill="currentColor" viewBox="0 0 16 16">
                 <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
@@ -902,11 +904,11 @@ export default function SidebarChatGPT({
               </svg>
               {!isMinimized && <span>Bookmarks</span>}
             </button>
+            </div>
           </div>
-        </div>
-        
-        {/* Scrollable Chat List Section */}
-        <div className="flex-1 overflow-y-auto px-2 py-2">
+          
+          {/* Chat List Section */}
+          <div className="px-2 py-2">
           {!isMinimized && (
             <>
               {/* Archive toggle button */}
@@ -950,8 +952,11 @@ export default function SidebarChatGPT({
               )}
             </>
           )}
+          </div>
         </div>
-        <div className="border-t border-[#3f3f3f] p-3 relative">
+        
+        {/* User Section - Fixed at bottom */}
+        <div className="border-t border-[#3f3f3f] p-3 flex-shrink-0 relative">
           <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-full p-2 hover:bg-[#2f2f2f] rounded-lg transition flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
               {userEmail?.charAt(0).toUpperCase()}
