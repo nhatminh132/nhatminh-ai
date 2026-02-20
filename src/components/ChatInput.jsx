@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
-export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, disabled, mode, onModeChange, proMaxUsesLeft, proLiteUsesLeft, isGuest = false, guestAirUsesLeft = 10, guestBaseUsesLeft = 10, tokenUsage = 0, tokenLimit = 30000 }) {
+export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, disabled, mode, onModeChange, proMaxUsesLeft, proLiteUsesLeft, isGuest = false, guestAirUsesLeft = 10, guestBaseUsesLeft = 10, tokenUsage = 0, tokenLimit = 30000, hasUnlimitedAccess = false }) {
   const [message, setMessage] = useState('')
   const [rows, setRows] = useState(1)
   const [showModeMenu, setShowModeMenu] = useState(false)
@@ -50,6 +50,12 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
   const modeConfig = isGuest ? {
     air: { label: 'Air', description: `Quick responses (${guestAirUsesLeft}/10 uses left)`, disabled: guestAirUsesLeft <= 0 },
     base: { label: 'Base', description: `Standard model (${guestBaseUsesLeft}/10 uses left)`, disabled: guestBaseUsesLeft <= 0 }
+  } : hasUnlimitedAccess ? {
+    air: { label: 'Air', description: 'Unlimited Access ✨', badge: 'UNLIMITED' },
+    base: { label: 'Base', description: 'Unlimited Access ✨', badge: 'UNLIMITED' },
+    pro: { label: 'Pro', description: 'Unlimited Access ✨', badge: 'UNLIMITED' },
+    'pro-max': { label: 'Pro Max', description: 'Unlimited Access ✨', badge: 'UNLIMITED' },
+    ultra: { label: 'Ultra', description: 'Unlimited Access ✨ + Web Search', badge: 'UNLIMITED' }
   } : {
     air: { label: 'Air', description: 'Unlimited • 10K TPM', badge: 'FREE' },
     base: { label: 'Base', description: 'Unlimited • 10K TPM', badge: 'FREE' },
@@ -210,6 +216,7 @@ export default function ChatInput({ onSendMessage, onSendImage, uploadsLeft, dis
                             <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
                               config.badge === 'FREE' ? 'bg-green-600 text-white' :
                               config.badge === 'PRO' ? 'bg-blue-600 text-white' :
+                              config.badge === 'UNLIMITED' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' :
                               'bg-purple-600 text-white'
                             }`}>
                               {config.badge}

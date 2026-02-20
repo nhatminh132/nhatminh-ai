@@ -41,6 +41,7 @@ export default function Chat({ user }) {
   const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState(null)
   const [tokenUsageThisMinute, setTokenUsageThisMinute] = useState(0)
   const [lastTokenResetTime, setLastTokenResetTime] = useState(Date.now())
+  const [hasUnlimitedAccess, setHasUnlimitedAccess] = useState(false)
   const [personality, setPersonality] = useState(() => {
     return localStorage.getItem('aiPersonality') || 'default'
   })
@@ -116,6 +117,21 @@ export default function Chat({ user }) {
       if (error) throw error
       if (data) {
         setUploadsLeft(data.uploads_left)
+        
+        // Check for unlimited access from redeemed codes
+        const { data: redeemedCodes, error: codesError } = await supabase
+          .from('redeemed_codes')
+          .select('expires_at')
+          .eq('user_id', user.id)
+          .gt('expires_at', new Date().toISOString())
+          .order('expires_at', { ascending: false })
+          .limit(1)
+        
+        if (!codesError && redeemedCodes && redeemedCodes.length > 0) {
+          setHasUnlimitedAccess(true)
+        } else {
+          setHasUnlimitedAccess(false)
+        }
         
         // Set user name from display_name, username, or email username part
         const emailUsername = user.email?.split('@')[0] || 'there'
@@ -679,7 +695,7 @@ export default function Chat({ user }) {
   return (
     <div className="flex flex-col h-screen bg-[#212121]">
       {/* Beta Code Banner */}
-      {!isGuest && <BetaCodeBanner />}
+      {!isGuest && <BetaCodeBanner userId={user?.id} />}
       
       <div className="flex flex-1 overflow-hidden">
         {/* Keyboard Shortcuts Help */}
@@ -775,6 +791,7 @@ export default function Chat({ user }) {
                 guestBaseUsesLeft={guestBaseUsesLeft}
                 tokenUsage={tokenUsageThisMinute}
                 tokenLimit={TOKEN_LIMITS[mode]}
+                hasUnlimitedAccess={hasUnlimitedAccess}
               />
             </div>
           </div>
@@ -816,6 +833,7 @@ export default function Chat({ user }) {
               guestBaseUsesLeft={guestBaseUsesLeft}
               tokenUsage={tokenUsageThisMinute}
               tokenLimit={TOKEN_LIMITS[mode]}
+              hasUnlimitedAccess={hasUnlimitedAccess}
             />
           </>
         )}

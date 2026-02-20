@@ -1,18 +1,44 @@
 import React, { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabaseClient'
 
-export default function BetaCodeBanner() {
+export default function BetaCodeBanner({ userId }) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    // Check if current date is within promotion period (16/2/2026 - 20/3/2026)
-    const now = new Date()
-    const startDate = new Date('2026-02-16')
-    const endDate = new Date('2026-03-20')
+    const checkBannerVisibility = async () => {
+      // Check if current date is within promotion period (16/2/2026 - 20/3/2026)
+      const now = new Date()
+      const startDate = new Date('2026-02-16')
+      const endDate = new Date('2026-03-20')
 
-    if (now >= startDate && now <= endDate) {
-      setIsVisible(true)
+      if (now < startDate || now > endDate) {
+        setIsVisible(false)
+        return
+      }
+
+      // Check if user has already redeemed the BETA code
+      if (userId) {
+        const { data, error } = await supabase
+          .from('redeemed_codes')
+          .select('code')
+          .eq('user_id', userId)
+          .eq('code', 'BETA')
+          .gt('expires_at', now.toISOString())
+          .limit(1)
+
+        if (!error && data && data.length > 0) {
+          // User already redeemed, hide banner
+          setIsVisible(false)
+        } else {
+          setIsVisible(true)
+        }
+      } else {
+        setIsVisible(true)
+      }
     }
-  }, [])
+
+    checkBannerVisibility()
+  }, [userId])
 
   const handleDismiss = () => {
     setIsVisible(false)
@@ -21,18 +47,18 @@ export default function BetaCodeBanner() {
   if (!isVisible) return null
 
   return (
-    <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 relative">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">🎉</span>
-          <div>
+    <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 relative flex-shrink-0">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-2xl flex-shrink-0">🎉</span>
+          <div className="flex-1 min-w-0">
             <p className="font-bold">Limited Time Offer!</p>
-            <p className="text-sm">Use code <span className="bg-white text-purple-600 px-2 py-0.5 rounded font-mono font-bold">BETA</span> for 5 days of unlimited access! Valid until March 20, 2026.</p>
+            <p className="text-sm break-words">Use code <span className="bg-white text-purple-600 px-2 py-0.5 rounded font-mono font-bold whitespace-nowrap">BETA</span> for 5 days of unlimited access! Valid until March 20, 2026.</p>
           </div>
         </div>
         <button
           onClick={handleDismiss}
-          className="ml-4 text-white hover:text-gray-200 transition"
+          className="flex-shrink-0 text-white hover:text-gray-200 transition"
           aria-label="Dismiss"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
